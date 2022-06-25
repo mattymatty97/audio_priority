@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "com.mattymatty.audio_priority.audio_priority_fix.mixins",
+  "package": "com.mattymatty.audio_priority.mixins",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
   ],

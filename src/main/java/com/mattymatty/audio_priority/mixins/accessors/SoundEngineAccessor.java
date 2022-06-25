@@ -1,4 +1,4 @@
-package com.mattymatty.audio_priority.audio_priority_fix.mixins.accessors;
+package com.mattymatty.audio_priority.mixins.accessors;
 
 import net.minecraft.client.sound.SoundEngine;
 import org.spongepowered.asm.mixin.Mixin;

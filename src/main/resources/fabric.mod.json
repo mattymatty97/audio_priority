@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "id": "audio_engine_priority",
+  "id": "audio_engine_tweaks",
   "version": "${version}",
-  "name": "Priorities for Audio Engine",
-  "description": "improves the audio engine by introducing priorities to audio sources and threshold levels to avoid overloads",
+  "name": "Tweaks for Audio Engine",
+  "description": "various improvements to the audio engine to avoid overloading",
   "authors": [
     {
       "name": "mattymatty",
@@ -22,7 +22,7 @@
   "accessWidener": "audio_priority.accesswidener",
   "entrypoints": {
     "client": [
-      "com.mattymatty.audio_priority.audio_priority_fix.client.Audio_priority"
+      "com.mattymatty.audio_priority.client.AudioPriority"
     ]
   },
   "mixins": [

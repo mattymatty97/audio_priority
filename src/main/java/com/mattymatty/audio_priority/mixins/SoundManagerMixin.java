@@ -1,6 +1,6 @@
-package com.mattymatty.audio_priority.audio_priority_fix.mixins;
+package com.mattymatty.audio_priority.mixins;
 
-import com.mattymatty.audio_priority.audio_priority_fix.Configs;
+import com.mattymatty.audio_priority.Configs;
 import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.client.sound.SoundManager;
 import net.minecraft.client.sound.SoundSystem;

@@ -1,4 +1,4 @@
-package com.mattymatty.audio_priority.audio_priority_fix;
+package com.mattymatty.audio_priority;
 
 import net.minecraft.sound.SoundCategory;
 

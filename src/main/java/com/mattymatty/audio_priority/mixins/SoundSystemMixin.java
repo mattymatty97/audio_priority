@@ -1,9 +1,9 @@
-package com.mattymatty.audio_priority.audio_priority_fix.mixins;
+package com.mattymatty.audio_priority.mixins;
 
-import com.mattymatty.audio_priority.audio_priority_fix.Configs;
-import com.mattymatty.audio_priority.audio_priority_fix.client.Audio_priority;
-import com.mattymatty.audio_priority.audio_priority_fix.mixins.accessors.SoundEngineAccessor;
-import com.mattymatty.audio_priority.audio_priority_fix.exceptions.SoundPoolException;
+import com.mattymatty.audio_priority.Configs;
+import com.mattymatty.audio_priority.client.AudioPriority;
+import com.mattymatty.audio_priority.mixins.accessors.SoundEngineAccessor;
+import com.mattymatty.audio_priority.exceptions.SoundPoolException;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.sound.*;
 import net.minecraft.entity.Entity;
@@ -11,7 +11,6 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
-import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -99,7 +98,7 @@ public abstract class SoundSystemMixin {
             }
         }catch ( SoundPoolException ex){
             //this should not be called anymore cause the play method now uses a threshold to decide whenever to actually play a sound or skip it
-            Audio_priority.LOGGER.warn("Sound pool full, Skipped {} sound events", total - count);
+            AudioPriority.LOGGER.warn("Sound pool full, Skipped {} sound events", total - count);
             //remove all missing from vanilla queue ( full skip )
             instances.forEach(startTicks::remove);
         }
@@ -108,7 +107,7 @@ public abstract class SoundSystemMixin {
         //TODO: remove it as might cause memory leaks
         if (skippedByCategory.size() > 0){
             for (Map.Entry<SoundCategory,AtomicInteger> entry: skippedByCategory.entrySet()){
-                Audio_priority.LOGGER.debug("Skipped {} sounds for {} category", entry.getValue().get(),
+                AudioPriority.LOGGER.debug("Skipped {} sounds for {} category", entry.getValue().get(),
                         entry.getKey().getName());
             }
             skippedByCategory.clear();
@@ -156,7 +155,7 @@ public abstract class SoundSystemMixin {
             //if there are too many duplicated sounds skip playing them
             if (count.getAndIncrement() > Configs.maxDuplicatedSounds) {
                 //if (!played_sounds.add(sound.getId())){
-                Audio_priority.LOGGER.debug("Duplicated Sound {} at {} {} {}, Skipped",
+                AudioPriority.LOGGER.debug("Duplicated Sound {} at {} {} {}, Skipped",
                         sound.getId(),
                         sound.getX(),
                         sound.getY(),
@@ -176,7 +175,7 @@ public abstract class SoundSystemMixin {
         // check the sound pool fill level and compare it to the threshold for the current category
         boolean ret = (sound_count < (max_count) * percentage);
         if (!ret){
-            Audio_priority.LOGGER.debug("Sound pool level {}% too high for {} sounds, Skipped",
+            AudioPriority.LOGGER.debug("Sound pool level {}% too high for {} sounds, Skipped",
                     (sound_count/(float)max_count)*100,
                     sound.getCategory().getName());
             //log the amount of skipped sounds ( debug only )

@@ -1,27 +1,32 @@
 {
   "schemaVersion": 1,
-  "id": "audio_priority_fix",
+  "id": "audio_engine_priority",
   "version": "${version}",
-  "name": "Audio_priority_fix",
-  "description": "",
+  "name": "Priorities for Audio Engine",
+  "description": "improves the audio engine by introducing priorities to audio sources and threshold levels to avoid overloads",
   "authors": [
-    "mattymatty"
+    {
+      "name": "mattymatty",
+      "contact": {
+        "discord": "mattymatty#9621"
+      }
+    }
   ],
-  "contact": {},
+  "contact": {
+    "homepage": "https://github.com/mattymatty97/audio_priority",
+    "issues": "https://github.com/mattymatty97/audio_priority/issues"
+  },
   "license": "LGPL-3.0",
-  "icon": "assets/audio_priority_fix/icon.png",
+  "icon": "assets/audio_priority/icon.png",
   "environment": "client",
-  "accessWidener": "audio_priority_fix.accesswidener",
+  "accessWidener": "audio_priority.accesswidener",
   "entrypoints": {
     "client": [
-      "com.mattymatty.audio_priority.audio_priority_fix.client.Audio_priority_fixClient"
-    ],
-    "main": [
-      "com.mattymatty.audio_priority.audio_priority_fix.Audio_priority_fix"
+      "com.mattymatty.audio_priority.audio_priority_fix.client.Audio_priority"
     ]
   },
   "mixins": [
-    "audio_priority_fix.mixins.json"
+    "audio_priority.mixins.json"
   ],
   "depends": {
     "minecraft": "1.17.1"

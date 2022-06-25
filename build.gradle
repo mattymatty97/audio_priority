@@ -25,7 +25,7 @@ dependencies {
 }
 
 loom {
-    accessWidenerPath = file("src/main/resources/audio_priority_fix.accesswidener")
+    accessWidenerPath = file("src/main/resources/audio_priority.accesswidener")
 }
 
 processResources {

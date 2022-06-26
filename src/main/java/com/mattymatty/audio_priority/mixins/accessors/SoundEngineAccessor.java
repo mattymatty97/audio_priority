@@ -8,6 +8,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface SoundEngineAccessor {
     @Accessor
     SoundEngine.SourceSet getStreamingSources();
+
     @Accessor
     SoundEngine.SourceSet getStaticSources();
 }

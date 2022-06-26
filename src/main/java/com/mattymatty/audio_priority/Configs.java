@@ -1,44 +1,68 @@
 package com.mattymatty.audio_priority;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.sound.SoundCategory;
 
+import java.io.*;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class Configs {
-    public static final Map<SoundCategory, Integer> categoryClasses = new HashMap<>();
-    public static final Map<Integer, Float> maxPercentPerCategory = new HashMap<>();
-    public static final Set<SoundCategory> instantCategories = new HashSet<>();
+public class Configs implements Serializable {
 
-    public static Integer maxDuplicatedSounds;
+    private static Configs instance = new Configs();
+    public final Map<SoundCategory, Integer> categoryClasses = new HashMap<>();
+    public final Map<SoundCategory, Double> maxPercentPerCategory = new HashMap<>();
+    public final Set<SoundCategory> instantCategories = new HashSet<>();
+    public Integer maxDuplicatedSounds;
 
-    static {
-        categoryClasses.put(SoundCategory.MASTER,0);
-        categoryClasses.put(SoundCategory.VOICE,0);
-        categoryClasses.put(SoundCategory.PLAYERS,1);
-        categoryClasses.put(SoundCategory.HOSTILE,2);
-        categoryClasses.put(SoundCategory.BLOCKS,3);
-        categoryClasses.put(SoundCategory.MUSIC,4);
-        categoryClasses.put(SoundCategory.RECORDS,4);
-        categoryClasses.put(SoundCategory.NEUTRAL,5);
-        categoryClasses.put(SoundCategory.WEATHER,6);
-        categoryClasses.put(SoundCategory.AMBIENT,6);
+    Configs() {
+        categoryClasses.put(SoundCategory.MASTER, 0);
+        categoryClasses.put(SoundCategory.VOICE, 0);
+        categoryClasses.put(SoundCategory.PLAYERS, 1);
+        categoryClasses.put(SoundCategory.HOSTILE, 2);
+        categoryClasses.put(SoundCategory.BLOCKS, 3);
+        categoryClasses.put(SoundCategory.MUSIC, 4);
+        categoryClasses.put(SoundCategory.RECORDS, 4);
+        categoryClasses.put(SoundCategory.NEUTRAL, 5);
+        categoryClasses.put(SoundCategory.WEATHER, 6);
+        categoryClasses.put(SoundCategory.AMBIENT, 6);
 
 
-        maxPercentPerCategory.put(0,1f);
-        maxPercentPerCategory.put(1,0.95f);
-        maxPercentPerCategory.put(2,0.9f);
-        maxPercentPerCategory.put(3,0.8f);
-        maxPercentPerCategory.put(4,0.7f);
-        maxPercentPerCategory.put(5,0.6f);
-        maxPercentPerCategory.put(6,0.5f);
+        maxPercentPerCategory.put(SoundCategory.MASTER, 1d);
+        maxPercentPerCategory.put(SoundCategory.VOICE, 1d);
+        maxPercentPerCategory.put(SoundCategory.PLAYERS, 0.95d);
+        maxPercentPerCategory.put(SoundCategory.HOSTILE, 0.9d);
+        maxPercentPerCategory.put(SoundCategory.BLOCKS, 0.8d);
+        maxPercentPerCategory.put(SoundCategory.MUSIC, 0.7d);
+        maxPercentPerCategory.put(SoundCategory.RECORDS, 0.7d);
+        maxPercentPerCategory.put(SoundCategory.NEUTRAL, 0.6d);
+        maxPercentPerCategory.put(SoundCategory.WEATHER, 0.5d);
+        maxPercentPerCategory.put(SoundCategory.AMBIENT, 0.5d);
 
         instantCategories.add(SoundCategory.MASTER);
         instantCategories.add(SoundCategory.MUSIC);
 
         maxDuplicatedSounds = 5;
+    }
+
+    public static Configs getInstance() {
+        return instance;
+    }
+
+    public static void saveConfig() throws IOException {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        try (FileWriter writer = new FileWriter(FabricLoader.getInstance().getConfigDir().resolve("audio_engine.json").toFile())) {
+            writer.write(gson.toJson(getInstance()));
+        }
+    }
+
+    public static void loadConfig() throws FileNotFoundException {
+        Gson gson = new Gson();
+        instance = gson.fromJson(new FileReader(FabricLoader.getInstance().getConfigDir().resolve("audio_engine.json").toFile()), Configs.class);
     }
 
 }

@@ -173,7 +173,7 @@ public abstract class SoundSystemMixin {
         if (!Configs.getInstance().instantCategories.contains(sound.getCategory())) {
             //get duplicate map for this sound location ( Block Position )
             Map<Identifier, AtomicInteger> played_sounds = this.playedByPos.computeIfAbsent(
-                    new Vec3d(sound.getX(), sound.getY(), sound.getZ()).floorAlongAxes(EnumSet.allOf(Direction.Axis.class)),
+                    new Vec3d(Math.round(sound.getX()), Math.round(sound.getY()), Math.round(sound.getZ())),
                     (i) -> new HashMap<>());
 
             AtomicInteger count = played_sounds.computeIfAbsent(sound.getId(), (i) -> new AtomicInteger());

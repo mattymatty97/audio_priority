@@ -88,9 +88,14 @@ tasks.register("updateBuildNumber") {
     doLast {
         Properties props = new Properties()
 
-        File propsFile = new File('build.properties')
+        File propsFile = new File("build-${project.minecraft_version}.properties")
 
-        props.load(propsFile.newDataInputStream())
+        try {
+            props.load(propsFile.newDataInputStream())
+        }catch (IOException ex){
+            props.setProperty('mod_buildnumber', "1")
+            props.setProperty('mod_version', project.mod_version.toString())
+        }
 
         String prevVersion = (props.getProperty('mod_version'))
 
@@ -116,12 +121,12 @@ tasks.register("FinalizeBuild", Copy) {
     into "output/libs"
     include "${project.archives_base_name}-${project.version}.jar"
     rename { String filename ->
-        return "${project.archives_base_name}-${project.version} build ${buildnumber}.jar"
+        return "${project.archives_base_name}-${project.version}-${project.minecraft_version} build ${buildnumber}.jar"
     }
     doLast {
         mkdir "output/libs"
         println "Output File:"
-        println "${project.archives_base_name}-${project.version} build ${buildnumber}.jar"
+        println "${project.archives_base_name}-${project.version}-${project.minecraft_version} build ${buildnumber}.jar"
     }
     outputs.upToDateWhen { false }
 }

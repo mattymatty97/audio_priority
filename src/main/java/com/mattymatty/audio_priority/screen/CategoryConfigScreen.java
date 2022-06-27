@@ -4,14 +4,12 @@ import com.mattymatty.audio_priority.Configs;
 import com.mattymatty.audio_priority.client.AudioPriority;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.sound.SoundCategory;
-import net.minecraft.text.BaseText;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.screen.ScreenTexts;
+import net.minecraft.text.Text;
 
 import java.io.IOException;
 import java.util.stream.IntStream;
@@ -22,7 +20,7 @@ public class CategoryConfigScreen extends Screen {
     protected final Screen parent;
 
     public CategoryConfigScreen(Screen parent, Screen origin) {
-        super(new LiteralText("Sound Category Priorities"));
+        super(Text.literal("Sound Category Priorities"));
         this.origin = origin;
         this.parent = parent;
     }
@@ -34,10 +32,11 @@ public class CategoryConfigScreen extends Screen {
         SoundCategory[] categories = SoundCategory.values();
         int count = categories.length;
 
-        this.addDrawableChild(CyclingButtonWidget.builder(LiteralText::new)
+        this.addDrawableChild(CyclingButtonWidget.builder(Text::literal)
                 .values(IntStream.range(0, count - 1).mapToObj(Integer::toString).toList())
                 .initially(Configs.getInstance().categoryClasses.get(SoundCategory.MASTER).toString())
-                .build(this.width / 2 - 155, this.height / 6 - 12, 310, 20, new TranslatableText("soundCategory." + SoundCategory.MASTER.getName())
+                .build(this.width / 2 - 155, this.height / 6 - 12, 310, 20,
+                        Text.translatable("soundCategory." + SoundCategory.MASTER.getName())
                         , (button, value) -> {
                             Configs.getInstance().categoryClasses.put(SoundCategory.MASTER, Integer.parseInt(value));
                         }));
@@ -47,12 +46,12 @@ public class CategoryConfigScreen extends Screen {
             if (category == SoundCategory.MASTER) continue;
             int j = this.width / 2 - 155 + i % 2 * 160;
             int k = this.height / 6 - 12 + 24 * (i >> 1);
-            BaseText label = new TranslatableText("soundCategory." + category.getName());
-            this.addDrawableChild(CyclingButtonWidget.builder(LiteralText::new)
+            this.addDrawableChild(CyclingButtonWidget.builder(Text::literal)
                     .values(IntStream.range(0, count - 1).mapToObj(Integer::toString).toList())
                     .initially(Configs.getInstance()
                             .categoryClasses.get(category).toString())
-                    .build(j, k, 150, 20, label
+                    .build(j, k, 150, 20,
+                            Text.translatable("soundCategory." + category.getName())
                             , (button, value) -> {
                                 Configs.getInstance().categoryClasses.put(category, Integer.parseInt(value));
                             }));

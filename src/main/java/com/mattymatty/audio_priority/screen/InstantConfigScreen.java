@@ -4,13 +4,12 @@ import com.mattymatty.audio_priority.Configs;
 import com.mattymatty.audio_priority.client.AudioPriority;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.sound.SoundCategory;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.screen.ScreenTexts;
+import net.minecraft.text.Text;
 
 import java.io.IOException;
 import java.util.List;
@@ -21,7 +20,7 @@ public class InstantConfigScreen extends Screen {
     protected final Screen parent;
 
     public InstantConfigScreen(Screen parent, Screen origin) {
-        super(new LiteralText("Sound Categories allowed to bypass Priorities"));
+        super(Text.literal("Sound Categories allowed to bypass Priorities"));
         this.origin = origin;
         this.parent = parent;
     }
@@ -30,10 +29,10 @@ public class InstantConfigScreen extends Screen {
     protected void init() {
         assert this.client != null;
 
-        CyclingButtonWidget<String> btn = CyclingButtonWidget.builder(LiteralText::new)
+        CyclingButtonWidget<String> btn = CyclingButtonWidget.builder(Text::literal)
                 .values(List.of(Boolean.FALSE.toString(), Boolean.TRUE.toString()))
                 .initially(Boolean.toString(Configs.getInstance().instantCategories.contains(SoundCategory.MASTER)))
-                .build(this.width / 2 - 155, this.height / 6 - 12, 310, 20, new TranslatableText("soundCategory." + SoundCategory.MASTER.getName())
+                .build(this.width / 2 - 155, this.height / 6 - 12, 310, 20, Text.translatable("soundCategory." + SoundCategory.MASTER.getName())
                         , (button, value) -> {
                             if (Boolean.parseBoolean(value))
                                 Configs.getInstance().instantCategories.add(SoundCategory.MASTER);
@@ -51,10 +50,10 @@ public class InstantConfigScreen extends Screen {
             if (category == SoundCategory.MASTER) continue;
             int j = this.width / 2 - 155 + i % 2 * 160;
             int k = this.height / 6 - 12 + 24 * (i >> 1);
-            this.addDrawableChild(CyclingButtonWidget.builder(LiteralText::new)
+            this.addDrawableChild(CyclingButtonWidget.builder(Text::literal)
                     .values(List.of(Boolean.FALSE.toString(), Boolean.TRUE.toString()))
                     .initially(Boolean.toString(Configs.getInstance().instantCategories.contains(category)))
-                    .build(j, k, 150, 20, new TranslatableText("soundCategory." + category.getName())
+                    .build(j, k, 150, 20, Text.translatable("soundCategory." + category.getName())
                             , (button, value) -> {
                                 if (Boolean.parseBoolean(value))
                                     Configs.getInstance().instantCategories.add(category);

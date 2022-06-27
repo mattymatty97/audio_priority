@@ -4,10 +4,10 @@ import com.mattymatty.audio_priority.Configs;
 import com.mattymatty.audio_priority.client.AudioPriority;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
+import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 
 import java.io.IOException;
@@ -17,7 +17,7 @@ public class ConfigScreen extends Screen {
     protected final Screen parent;
 
     public ConfigScreen(Screen parent) {
-        this(parent, new LiteralText("Audio Engine Tweaks Configs"));
+        this(parent, Text.literal("Audio Engine Tweaks Configs"));
     }
 
     public ConfigScreen(Screen parent, Text title) {
@@ -30,11 +30,11 @@ public class ConfigScreen extends Screen {
         assert this.client != null;
         super.init();
         this.addDrawableChild(new ButtonWidget(this.width / 2 - 75, this.height / 6 + 48 - 6, 150, 20,
-                new LiteralText("Sound Category Priorities"), button -> this.client.setScreen(new CategoryConfigScreen(this, this.parent))));
+                Text.literal("Sound Category Priorities"), button -> this.client.setScreen(new CategoryConfigScreen(this, this.parent))));
         this.addDrawableChild(new ButtonWidget(this.width / 2 - 75, this.height / 6 + 72 - 6, 150, 20,
-                new LiteralText("Thresholds"), button -> this.client.setScreen(new ThresholdConfigScreen(this, this.parent))));
+                Text.literal("Thresholds"), button -> this.client.setScreen(new ThresholdConfigScreen(this, this.parent))));
         this.addDrawableChild(new ButtonWidget(this.width / 2 - 75, this.height / 6 + 96 - 6, 150, 20,
-                new LiteralText("Instant Categories"), button -> this.client.setScreen(new InstantConfigScreen(this, this.parent))));
+                Text.literal("Instant Categories"), button -> this.client.setScreen(new InstantConfigScreen(this, this.parent))));
 
         this.addDrawableChild(new ButtonWidget(this.width / 2 - 100, this.height / 6 + 168, 200, 20, ScreenTexts.DONE, button -> this.client.setScreen(this.parent)));
 

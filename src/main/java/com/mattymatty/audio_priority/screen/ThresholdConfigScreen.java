@@ -4,15 +4,12 @@ import com.mattymatty.audio_priority.Configs;
 import com.mattymatty.audio_priority.client.AudioPriority;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.sound.SoundCategory;
-import net.minecraft.text.BaseText;
-import net.minecraft.text.LiteralText;
+import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 
 import java.io.IOException;
 import java.util.function.Consumer;
@@ -23,7 +20,7 @@ public class ThresholdConfigScreen extends Screen {
     protected final Screen parent;
 
     public ThresholdConfigScreen(Screen parent, Screen origin) {
-        super(new LiteralText("Thresholds"));
+        super(Text.literal("Thresholds"));
         this.origin = origin;
         this.parent = parent;
     }
@@ -31,7 +28,7 @@ public class ThresholdConfigScreen extends Screen {
     @Override
     protected void init() {
         assert this.client != null;
-        ThresholdSlider slider = new ThresholdSlider(this.width / 2 - 155, this.height / 6 - 12, 310, 20, new TranslatableText("soundCategory." + SoundCategory.MASTER.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(SoundCategory.MASTER, 0d), (d) ->
+        ThresholdSlider slider = new ThresholdSlider(this.width / 2 - 155, this.height / 6 - 12, 310, 20, Text.translatable("soundCategory." + SoundCategory.MASTER.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(SoundCategory.MASTER, 0d), (d) ->
                 Configs.getInstance().maxPercentPerCategory.put(SoundCategory.MASTER, d)
         );
         slider.active = false;
@@ -41,8 +38,7 @@ public class ThresholdConfigScreen extends Screen {
             if (category == SoundCategory.MASTER) continue;
             int j = this.width / 2 - 155 + i % 2 * 160;
             int k = this.height / 6 - 12 + 24 * (i >> 1);
-            BaseText label = new TranslatableText("soundCategory." + category.getName());
-            this.addDrawableChild(new ThresholdSlider(j, k, 150, 20, label, Configs.getInstance().maxPercentPerCategory.getOrDefault(category, 0d), (d) ->
+            this.addDrawableChild(new ThresholdSlider(j, k, 150, 20, Text.translatable("soundCategory." + category.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(category, 0d), (d) ->
                     Configs.getInstance().maxPercentPerCategory.put(category, d)
             ));
             ++i;
@@ -53,7 +49,7 @@ public class ThresholdConfigScreen extends Screen {
 
         int j = this.width / 2 - 155 + i % 2 * 160;
         int k = this.height / 6 - 12 + 24 * (i >> 1);
-        this.addDrawableChild(new DuplicatesSlider(j, k, 310, 20, new LiteralText("Max Duplicated Sounds"), Configs.getInstance().maxDuplicatedSounds / 50d, (d) ->
+        this.addDrawableChild(new DuplicatesSlider(j, k, 310, 20, Text.literal("Max Duplicated Sounds"), Configs.getInstance().maxDuplicatedSounds / 50d, (d) ->
                 Configs.getInstance().maxDuplicatedSounds = Math.max(1, (int) (d * 50))
         ));
 
@@ -93,7 +89,7 @@ public class ThresholdConfigScreen extends Screen {
 
         @Override
         protected void updateMessage() {
-            Text text = (float) this.value == (float) this.getYImage(false) ? ScreenTexts.OFF : new LiteralText((int) (this.value * 100.0) + "%");
+            Text text = (float) this.value == (float) this.getYImage(false) ? ScreenTexts.OFF : Text.literal((int) (this.value * 100.0) + "%");
             this.setMessage(this.getMessage().copy().append(": ").append(text));
         }
 
@@ -113,7 +109,7 @@ public class ThresholdConfigScreen extends Screen {
 
         @Override
         protected void updateMessage() {
-            Text text = new LiteralText(Math.max((int) (this.value * 50d), 1) + " sounds");
+            Text text = Text.literal(Math.max((int) (this.value * 50d), 1) + " sounds");
             this.setMessage(this.getMessage().copy().append(": ").append(text));
         }
 

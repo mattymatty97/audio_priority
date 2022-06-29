@@ -49,7 +49,7 @@ public abstract class SoundSystemMixin {
             playerPos = client.getPos();
         }
 
-        int category = Configs.getInstance().categoryClasses.getOrDefault(sound.getCategory(), Configs.getInstance().categoryClasses.size());
+        int category = Configs.getInstance().categoryClasses.getOrDefault(sound.getCategory(), SoundCategory.values().length);
 
         int tie_break = 1;
 

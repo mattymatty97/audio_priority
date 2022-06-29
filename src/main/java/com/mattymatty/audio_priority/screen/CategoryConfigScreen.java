@@ -36,10 +36,10 @@ public class CategoryConfigScreen extends Screen {
 
         this.addDrawableChild(CyclingButtonWidget.builder(LiteralText::new)
                 .values(IntStream.range(0, count - 1).mapToObj(Integer::toString).toList())
-                .initially(Configs.getInstance().categoryClasses.getOrDefault(SoundCategory.MASTER, 0).toString())
+                .initially(Configs.getInstance().categoryClasses.getOrDefault(SoundCategory.MASTER.getName(), 0).toString())
                 .build(this.width / 2 - 155, this.height / 6 - 12, 310, 20, new TranslatableText("soundCategory." + SoundCategory.MASTER.getName())
                         , (button, value) -> {
-                            Configs.getInstance().categoryClasses.put(SoundCategory.MASTER, Integer.parseInt(value));
+                            Configs.getInstance().categoryClasses.put(SoundCategory.MASTER.getName(), Integer.parseInt(value));
                         }));
 
         int i = 2;
@@ -51,10 +51,10 @@ public class CategoryConfigScreen extends Screen {
             this.addDrawableChild(CyclingButtonWidget.builder(LiteralText::new)
                     .values(IntStream.range(0, count - 1).mapToObj(Integer::toString).toList())
                     .initially(Configs.getInstance()
-                            .categoryClasses.getOrDefault(category,SoundCategory.values().length).toString())
+                            .categoryClasses.getOrDefault(category.getName(),SoundCategory.values().length).toString())
                     .build(j, k, 150, 20, label
                             , (button, value) -> {
-                                Configs.getInstance().categoryClasses.put(category, Integer.parseInt(value));
+                                Configs.getInstance().categoryClasses.put(category.getName(), Integer.parseInt(value));
                             }));
             ++i;
         }

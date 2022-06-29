@@ -88,9 +88,14 @@ tasks.register("updateBuildNumber") {
     doLast {
         Properties props = new Properties()
 
-        File propsFile = new File('build.properties')
+        File propsFile = new File("build-${project.minecraft_version}.properties")
 
-        props.load(propsFile.newDataInputStream())
+        try {
+            props.load(propsFile.newDataInputStream())
+        }catch (IOException ex){
+            props.setProperty('mod_buildnumber', "1")
+            props.setProperty('mod_version', project.mod_version.toString())
+        }
 
         String prevVersion = (props.getProperty('mod_version'))
 

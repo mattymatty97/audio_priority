@@ -38,7 +38,7 @@ public class ThresholdConfigScreen extends Screen {
             if (category == SoundCategory.MASTER) continue;
             int j = this.width / 2 - 155 + i % 2 * 160;
             int k = this.height / 6 - 12 + 24 * (i >> 1);
-            this.addDrawableChild(new ThresholdSlider(j, k, 150, 20, Text.translatable("soundCategory." + category.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(category, 0d), (d) ->
+            this.addDrawableChild(new ThresholdSlider(j, k, 150, 20, Text.translatable("soundCategory." + category.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(category, 0.1d), (d) ->
                     Configs.getInstance().maxPercentPerCategory.put(category, d)
             ));
             ++i;

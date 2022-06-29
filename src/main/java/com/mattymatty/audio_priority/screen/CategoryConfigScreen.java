@@ -34,7 +34,7 @@ public class CategoryConfigScreen extends Screen {
 
         this.addDrawableChild(CyclingButtonWidget.builder(Text::literal)
                 .values(IntStream.range(0, count - 1).mapToObj(Integer::toString).toList())
-                .initially(Configs.getInstance().categoryClasses.get(SoundCategory.MASTER).toString())
+                .initially(Configs.getInstance().categoryClasses.getOrDefault(SoundCategory.MASTER,0).toString())
                 .build(this.width / 2 - 155, this.height / 6 - 12, 310, 20,
                         Text.translatable("soundCategory." + SoundCategory.MASTER.getName())
                         , (button, value) -> {
@@ -49,7 +49,7 @@ public class CategoryConfigScreen extends Screen {
             this.addDrawableChild(CyclingButtonWidget.builder(Text::literal)
                     .values(IntStream.range(0, count - 1).mapToObj(Integer::toString).toList())
                     .initially(Configs.getInstance()
-                            .categoryClasses.get(category).toString())
+                            .categoryClasses.getOrDefault(category,SoundCategory.values().length).toString())
                     .build(j, k, 150, 20,
                             Text.translatable("soundCategory." + category.getName())
                             , (button, value) -> {

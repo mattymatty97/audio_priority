@@ -31,13 +31,13 @@ public class InstantConfigScreen extends Screen {
 
         CyclingButtonWidget<String> btn = CyclingButtonWidget.builder(Text::literal)
                 .values(List.of(Boolean.FALSE.toString(), Boolean.TRUE.toString()))
-                .initially(Boolean.toString(Configs.getInstance().instantCategories.contains(SoundCategory.MASTER)))
+                .initially(Boolean.toString(Configs.getInstance().instantCategories.contains(SoundCategory.MASTER.getName())))
                 .build(this.width / 2 - 155, this.height / 6 - 12, 310, 20, Text.translatable("soundCategory." + SoundCategory.MASTER.getName())
                         , (button, value) -> {
                             if (Boolean.parseBoolean(value))
-                                Configs.getInstance().instantCategories.add(SoundCategory.MASTER);
+                                Configs.getInstance().instantCategories.add(SoundCategory.MASTER.getName());
                             else
-                                Configs.getInstance().instantCategories.remove(SoundCategory.MASTER);
+                                Configs.getInstance().instantCategories.remove(SoundCategory.MASTER.getName());
                         });
 
         btn.active = false;
@@ -52,13 +52,13 @@ public class InstantConfigScreen extends Screen {
             int k = this.height / 6 - 12 + 24 * (i >> 1);
             this.addDrawableChild(CyclingButtonWidget.builder(Text::literal)
                     .values(List.of(Boolean.FALSE.toString(), Boolean.TRUE.toString()))
-                    .initially(Boolean.toString(Configs.getInstance().instantCategories.contains(category)))
+                    .initially(Boolean.toString(Configs.getInstance().instantCategories.contains(category.getName())))
                     .build(j, k, 150, 20, Text.translatable("soundCategory." + category.getName())
                             , (button, value) -> {
                                 if (Boolean.parseBoolean(value))
-                                    Configs.getInstance().instantCategories.add(category);
+                                    Configs.getInstance().instantCategories.add(category.getName());
                                 else
-                                    Configs.getInstance().instantCategories.remove(category);
+                                    Configs.getInstance().instantCategories.remove(category.getName());
                             }));
             ++i;
         }

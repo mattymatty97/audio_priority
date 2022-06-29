@@ -28,8 +28,8 @@ public class ThresholdConfigScreen extends Screen {
     @Override
     protected void init() {
         assert this.client != null;
-        ThresholdSlider slider = new ThresholdSlider(this.width / 2 - 155, this.height / 6 - 12, 310, 20, Text.translatable("soundCategory." + SoundCategory.MASTER.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(SoundCategory.MASTER, 0d), (d) ->
-                Configs.getInstance().maxPercentPerCategory.put(SoundCategory.MASTER, d)
+        ThresholdSlider slider = new ThresholdSlider(this.width / 2 - 155, this.height / 6 - 12, 310, 20, Text.translatable("soundCategory." + SoundCategory.MASTER.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(SoundCategory.MASTER.getName(), 0d), (d) ->
+                Configs.getInstance().maxPercentPerCategory.put(SoundCategory.MASTER.getName(), d)
         );
         slider.active = false;
         this.addDrawableChild(slider);
@@ -38,8 +38,8 @@ public class ThresholdConfigScreen extends Screen {
             if (category == SoundCategory.MASTER) continue;
             int j = this.width / 2 - 155 + i % 2 * 160;
             int k = this.height / 6 - 12 + 24 * (i >> 1);
-            this.addDrawableChild(new ThresholdSlider(j, k, 150, 20, Text.translatable("soundCategory." + category.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(category, 0.1d), (d) ->
-                    Configs.getInstance().maxPercentPerCategory.put(category, d)
+            this.addDrawableChild(new ThresholdSlider(j, k, 150, 20, Text.translatable("soundCategory." + category.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(category.getName(), 0.1d), (d) ->
+                    Configs.getInstance().maxPercentPerCategory.put(category.getName(), d)
             ));
             ++i;
         }

@@ -49,7 +49,7 @@ public abstract class SoundSystemMixin {
             playerPos = client.getPos();
         }
 
-        int category = Configs.getInstance().categoryClasses.getOrDefault(sound.getCategory(), SoundCategory.values().length);
+        int category = Configs.getInstance().categoryClasses.getOrDefault(sound.getCategory().getName(), SoundCategory.values().length);
 
         int tie_break = 1;
 
@@ -170,7 +170,7 @@ public abstract class SoundSystemMixin {
     private boolean should_play(SoundInstance sound, SoundEngine.SourceSet dest) {
 
         //sounds that can be played outside the tick need to skip the duplication check
-        if (!Configs.getInstance().instantCategories.contains(sound.getCategory())) {
+        if (!Configs.getInstance().instantCategories.contains(sound.getCategory().getName())) {
             //get duplicate map for this sound location ( Block Position )
             Map<Identifier, AtomicInteger> played_sounds = this.playedByPos.computeIfAbsent(
                     new Vec3d(Math.round(sound.getX()), Math.round(sound.getY()), Math.round(sound.getZ())),
@@ -196,7 +196,7 @@ public abstract class SoundSystemMixin {
 
         int sound_count = dest.getSourceCount();
         int max_count = dest.getMaxSourceCount();
-        double percentage = Configs.getInstance().maxPercentPerCategory.getOrDefault(sound.getCategory(), 0.1d);
+        double percentage = Configs.getInstance().maxPercentPerCategory.getOrDefault(sound.getCategory().getName(), 0.1d);
         // check the sound pool fill level and compare it to the threshold for the current category
         boolean ret = (sound_count < (max_count) * percentage);
         if (!ret) {

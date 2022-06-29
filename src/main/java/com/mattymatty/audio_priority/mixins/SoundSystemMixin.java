@@ -196,7 +196,7 @@ public abstract class SoundSystemMixin {
 
         int sound_count = dest.getSourceCount();
         int max_count = dest.getMaxSourceCount();
-        double percentage = Configs.getInstance().maxPercentPerCategory.getOrDefault(sound.getCategory(), 0d);
+        double percentage = Configs.getInstance().maxPercentPerCategory.getOrDefault(sound.getCategory(), 0.1d);
         // check the sound pool fill level and compare it to the threshold for the current category
         boolean ret = (sound_count < (max_count) * percentage);
         if (!ret) {

@@ -80,17 +80,19 @@ public class ThresholdConfigScreen extends Screen {
     private static class ThresholdSlider extends SliderWidget {
 
         private final Consumer<Double> callback;
+        protected final Text label;
 
-        public ThresholdSlider(int x, int y, int width, int height, Text text, double value, Consumer<Double> callback) {
-            super(x, y, width, height, text, value);
+        public ThresholdSlider(int x, int y, int width, int height, Text label, double value, Consumer<Double> callback) {
+            super(x, y, width, height, label, value);
             this.callback = callback;
+            this.label = label;
             this.updateMessage();
         }
 
         @Override
         protected void updateMessage() {
             Text text = (float) this.value == (float) this.getYImage(false) ? ScreenTexts.OFF : Text.literal((int) (this.value * 100.0) + "%");
-            this.setMessage(this.getMessage().copy().append(": ").append(text));
+            this.setMessage(this.label.copy().append(": ").append(text));
         }
 
         @Override
@@ -103,14 +105,14 @@ public class ThresholdConfigScreen extends Screen {
 
     private static class DuplicatesSlider extends ThresholdSlider {
 
-        public DuplicatesSlider(int x, int y, int width, int height, Text text, double value, Consumer<Double> callback) {
-            super(x, y, width, height, text, value, callback);
+        public DuplicatesSlider(int x, int y, int width, int height, Text label, double value, Consumer<Double> callback) {
+            super(x, y, width, height, label, value, callback);
         }
 
         @Override
         protected void updateMessage() {
             Text text = Text.literal(Math.max((int) (this.value * 50d), 1) + " sounds");
-            this.setMessage(this.getMessage().copy().append(": ").append(text));
+            this.setMessage(this.label.copy().append(": ").append(text));
         }
 
 

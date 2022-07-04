@@ -84,17 +84,19 @@ public class ThresholdConfigScreen extends Screen {
     private static class ThresholdSlider extends SliderWidget {
 
         private final Consumer<Double> callback;
+        protected final Text label;
 
         public ThresholdSlider(int x, int y, int width, int height, Text text, double value, Consumer<Double> callback) {
             super(x, y, width, height, text, value);
             this.callback = callback;
+            this.label = text;
             this.updateMessage();
         }
 
         @Override
         protected void updateMessage() {
             Text text = (float) this.value == (float) this.getYImage(false) ? ScreenTexts.OFF : new LiteralText((int) (this.value * 100.0) + "%");
-            this.setMessage(this.getMessage().copy().append(": ").append(text));
+            this.setMessage(this.label.copy().append(": ").append(text));
         }
 
         @Override
@@ -114,7 +116,7 @@ public class ThresholdConfigScreen extends Screen {
         @Override
         protected void updateMessage() {
             Text text = new LiteralText(Math.max((int) (this.value * 50d), 1) + " sounds");
-            this.setMessage(this.getMessage().copy().append(": ").append(text));
+            this.setMessage(this.label.copy().append(": ").append(text));
         }
 
 

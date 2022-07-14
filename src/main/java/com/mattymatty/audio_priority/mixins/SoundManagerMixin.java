@@ -14,7 +14,7 @@ public class SoundManagerMixin {
     @Redirect(method = "play(Lnet/minecraft/client/sound/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sound/SoundSystem;play(Lnet/minecraft/client/sound/SoundInstance;)V"))
     void schedule_for_now(SoundSystem instance, SoundInstance sound) {
         //allow specific sound categories to be played outside the tick ( bypassing the priority queue )
-        if (Configs.getInstance().instantCategories.contains(sound.getCategory()))
+        if (Configs.getInstance().instantCategories.contains(sound.getCategory().getName()))
             instance.play(sound);
         else
             //otherwise force them to use the priority queue

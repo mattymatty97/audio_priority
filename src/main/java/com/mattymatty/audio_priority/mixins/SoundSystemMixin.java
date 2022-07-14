@@ -119,10 +119,10 @@ public abstract class SoundSystemMixin {
         try {
             while (iterator.hasNext()) {
                 SoundInstance soundInstance = iterator.next();
+                this.play(soundInstance);
                 if (soundInstance instanceof TickableSoundInstance) {
                     ((TickableSoundInstance) soundInstance).tick();
                 }
-                this.play(soundInstance);
                 count++;
                 //remove them from vanilla queue too
                 this.startTicks.remove(soundInstance);
@@ -134,23 +134,13 @@ public abstract class SoundSystemMixin {
             instances.forEach(startTicks::remove);
         }
 
-        //log the amount of skipped sounds ( debug only )
-        //TODO: remove it as might cause memory leaks
-        if (skippedByCategory.size() > 0) {
-            for (Map.Entry<SoundCategory, AtomicInteger> entry : skippedByCategory.entrySet()) {
-                AudioPriority.LOGGER.debug("Skipped {} sounds for {} category", entry.getValue().get(),
-                        entry.getKey().getName());
-            }
-            skippedByCategory.clear();
-        }
-
         //clear the duplication list
         playedByPos.forEach((k, m) -> m.clear()); //try and clear also potential memory leaks
         playedByPos.clear();
 
         //remove due ticks from sound queue
         for (Integer key : tickKeys) {
-            soundsPerTick.remove(key);
+            soundsPerTick.remove(key).clear();
         }
         //do not run vanilla code
         ci.cancel();
@@ -186,10 +176,6 @@ public abstract class SoundSystemMixin {
                         sound.getX(),
                         sound.getY(),
                         sound.getZ());
-                skippedByCategory.computeIfAbsent(
-                        sound.getCategory(),
-                        k -> new AtomicInteger()
-                ).incrementAndGet();
                 return false;
             }
         }
@@ -203,12 +189,6 @@ public abstract class SoundSystemMixin {
             AudioPriority.LOGGER.debug("Sound pool level {}% too high for {} sounds, Skipped",
                     (sound_count / (float) max_count) * 100,
                     sound.getCategory().getName());
-            //log the amount of skipped sounds ( debug only )
-            //TODO: remove it as might cause memory leaks
-            skippedByCategory.computeIfAbsent(
-                    sound.getCategory(),
-                    k -> new AtomicInteger()
-            ).incrementAndGet();
         }
         return ret;
     }

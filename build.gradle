@@ -131,6 +131,6 @@ tasks.register("FinalizeBuild", Copy) {
     outputs.upToDateWhen { false }
 }
 
-tasks.build.finalizedBy updateBuildNumber
-tasks.updateBuildNumber.shouldRunAfter build
-tasks.updateBuildNumber.finalizedBy FinalizeBuild
+tasks.compileJava.finalizedBy updateBuildNumber
+tasks.updateBuildNumber.shouldRunAfter compileJava
+tasks.build.finalizedBy FinalizeBuild

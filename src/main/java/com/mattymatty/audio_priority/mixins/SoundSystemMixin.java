@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 
 @Mixin(SoundSystem.class)
 public abstract class SoundSystemMixin {
-    private final Map<SoundCategory, AtomicInteger> skippedByCategory = new HashMap<>();
     private final Map<Vec3d, Map<Identifier, AtomicInteger>> playedByPos = new HashMap<>();
     Map<Integer, Set<SoundInstance>> soundsPerTick = new TreeMap<>();
     @Shadow
@@ -102,7 +101,7 @@ public abstract class SoundSystemMixin {
     @Inject(method = "tick()V", at = @At(value = "INVOKE", target = "Ljava/util/Set;iterator()Ljava/util/Iterator;", ordinal = 1, shift = At.Shift.BEFORE), cancellable = true)
     void play_current_tick_sounds(CallbackInfo ci) {
         //list due tick values
-        Set<Integer> tickKeys = soundsPerTick.keySet().stream().filter(i -> i < this.ticks).collect(Collectors.toSet());
+        Set<Integer> tickKeys = soundsPerTick.keySet().stream().filter(i -> i <= this.ticks).collect(Collectors.toSet());
         //get all sounds to be played and order them
         List<SoundInstance> instances = soundsPerTick.entrySet().stream()
                 .filter(e -> tickKeys.contains(e.getKey()))
@@ -114,15 +113,12 @@ public abstract class SoundSystemMixin {
         long total = instances.size();
         long count = 0;
 
-        Iterator<SoundInstance> iterator = instances.iterator();
-
         try {
-            while (iterator.hasNext()) {
-                SoundInstance soundInstance = iterator.next();
+            for (SoundInstance soundInstance : instances) {
+                this.play(soundInstance);
                 if (soundInstance instanceof TickableSoundInstance) {
                     ((TickableSoundInstance) soundInstance).tick();
                 }
-                this.play(soundInstance);
                 count++;
                 //remove them from vanilla queue too
                 this.startTicks.remove(soundInstance);
@@ -134,24 +130,15 @@ public abstract class SoundSystemMixin {
             instances.forEach(startTicks::remove);
         }
 
-        //log the amount of skipped sounds ( debug only )
-        //TODO: remove it as might cause memory leaks
-        if (skippedByCategory.size() > 0) {
-            for (Map.Entry<SoundCategory, AtomicInteger> entry : skippedByCategory.entrySet()) {
-                AudioPriority.LOGGER.debug("Skipped {} sounds for {} category", entry.getValue().get(),
-                        entry.getKey().getName());
-            }
-            skippedByCategory.clear();
-        }
-
         //clear the duplication list
         playedByPos.forEach((k, m) -> m.clear()); //try and clear also potential memory leaks
         playedByPos.clear();
 
         //remove due ticks from sound queue
         for (Integer key : tickKeys) {
-            soundsPerTick.remove(key);
+            soundsPerTick.remove(key).clear();
         }
+
         //do not run vanilla code
         ci.cancel();
     }
@@ -186,10 +173,6 @@ public abstract class SoundSystemMixin {
                         sound.getX(),
                         sound.getY(),
                         sound.getZ());
-                skippedByCategory.computeIfAbsent(
-                        sound.getCategory(),
-                        k -> new AtomicInteger()
-                ).incrementAndGet();
                 return false;
             }
         }
@@ -203,12 +186,6 @@ public abstract class SoundSystemMixin {
             AudioPriority.LOGGER.debug("Sound pool level {}% too high for {} sounds, Skipped",
                     (sound_count / (float) max_count) * 100,
                     sound.getCategory().getName());
-            //log the amount of skipped sounds ( debug only )
-            //TODO: remove it as might cause memory leaks
-            skippedByCategory.computeIfAbsent(
-                    sound.getCategory(),
-                    k -> new AtomicInteger()
-            ).incrementAndGet();
         }
         return ret;
     }

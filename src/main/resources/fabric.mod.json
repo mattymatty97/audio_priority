@@ -23,15 +23,12 @@
   "entrypoints": {
     "client": [
       "com.mattymatty.audio_priority.client.AudioPriority"
-    ],
-    "modmenu": [
-      "com.mattymatty.audio_priority.client.AudioPriorityModMenu"
     ]
   },
   "mixins": [
     "audio_priority.mixins.json"
   ],
   "depends": {
-    "minecraft": ["1.17.1", "1.18.x"]
+    "minecraft": ["1.16.x","1.17.1", "1.18.x"]
   }
 }

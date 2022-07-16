@@ -9,7 +9,6 @@ import net.minecraft.client.sound.*;
 import net.minecraft.entity.Entity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -108,7 +107,7 @@ public abstract class SoundSystemMixin {
                 .flatMap(e -> e.getValue().stream())
                 .distinct()
                 .sorted(Comparator.comparing(SoundSystemMixin::sound_comparator))
-                .toList();
+                .collect(Collectors.toList());
 
         long total = instances.size();
         long count = 0;

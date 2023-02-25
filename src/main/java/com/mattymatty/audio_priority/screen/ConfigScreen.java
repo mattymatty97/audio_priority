@@ -29,15 +29,14 @@ public class ConfigScreen extends Screen {
     protected void init() {
         assert this.client != null;
         super.init();
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 75, this.height / 6 + 48 - 6, 150, 20,
-                Text.literal("Sound Category Priorities"), button -> this.client.setScreen(new CategoryConfigScreen(this, this.parent))));
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 75, this.height / 6 + 72 - 6, 150, 20,
-                Text.literal("Thresholds"), button -> this.client.setScreen(new ThresholdConfigScreen(this, this.parent))));
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 75, this.height / 6 + 96 - 6, 150, 20,
-                Text.literal("Instant Categories"), button -> this.client.setScreen(new InstantConfigScreen(this, this.parent))));
-
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 100, this.height / 6 + 168, 200, 20, ScreenTexts.DONE, button -> this.client.setScreen(this.parent)));
-
+        this.addDrawableChild(ButtonWidget.builder(Text.literal("Sound Category Priorities"), button -> this.client.setScreen(new CategoryConfigScreen(this, this.parent)))
+                .dimensions(this.width / 2 - 75, this.height / 6 + 48 - 6, 150, 20).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.literal("Thresholds"), button -> this.client.setScreen(new ThresholdConfigScreen(this, this.parent)))
+                .dimensions(this.width / 2 - 75, this.height / 6 + 72 - 6, 150, 20).build());
+        this.addDrawableChild(ButtonWidget.builder(Text.literal("Instant Categories"), button -> this.client.setScreen(new InstantConfigScreen(this, this.parent)))
+                .dimensions(this.width / 2 - 75, this.height / 6 + 96 - 6, 150, 20).build());
+        this.addDrawableChild(ButtonWidget.builder(ScreenTexts.DONE, button -> this.client.setScreen(this.parent))
+                .dimensions(this.width / 2 - 100, this.height / 6 + 168, 200, 20).build());
     }
 
 

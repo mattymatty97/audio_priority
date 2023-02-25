@@ -58,9 +58,8 @@ public class CategoryConfigScreen extends Screen {
             ++i;
         }
 
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 105, (int) (this.height * 0.9), 100, 20, ScreenTexts.BACK, button -> this.client.setScreen(this.parent)));
-        this.addDrawableChild(new ButtonWidget(this.width / 2 + 5, (int) (this.height * 0.9), 100, 20, ScreenTexts.DONE, button -> this.client.setScreen(this.origin)));
-
+        this.addDrawableChild(ButtonWidget.builder(ScreenTexts.BACK, button -> this.client.setScreen(this.parent)).dimensions(this.width / 2 - 105, (int) (this.height * 0.9), 100, 20 ).build());
+        this.addDrawableChild(ButtonWidget.builder(ScreenTexts.DONE, button -> this.client.setScreen(this.origin)).dimensions(this.width / 2 + 5, (int) (this.height * 0.9), 100, 20 ).build());
     }
 
 

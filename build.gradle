@@ -1,5 +1,6 @@
 plugins {
-    id 'fabric-loom' version '0.12.51'
+    id 'fabric-loom' version '1.2-SNAPSHOT'
+    id 'io.github.juuxel.loom-quiltflower' version '1.10.0'
     id 'maven-publish'
 }
 
@@ -20,6 +21,7 @@ dependencies {
     modCompileOnlyApi "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modCompileOnlyApi "com.terraformersmc:modmenu:latest.release"
     implementation 'com.google.code.gson:gson:latest.release'
+    include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.2.0-rc.2")))
 }
 
 loom {
@@ -88,7 +90,7 @@ tasks.register("updateBuildNumber") {
     doLast {
         Properties props = new Properties()
 
-        File propsFile = new File("build-${project.minecraft_version}.properties")
+        File propsFile = new File("build.properties")
 
         try {
             props.load(propsFile.newDataInputStream())

@@ -2,11 +2,10 @@ package com.mattymatty.audio_priority.screen;
 
 import com.mattymatty.audio_priority.Configs;
 import com.mattymatty.audio_priority.client.AudioPriority;
-import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.SliderWidget;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
@@ -49,9 +48,14 @@ public class ThresholdConfigScreen extends Screen {
 
         int j = this.width / 2 - 155 + i % 2 * 160;
         int k = this.height / 6 - 12 + 24 * (i >> 1);
-        this.addDrawableChild(new DuplicatesSlider(j, k, 310, 20, Text.literal("Max Duplicated Sounds"), Configs.getInstance().maxDuplicatedSounds / 50d, (d) ->
-                Configs.getInstance().maxDuplicatedSounds = Math.max(1, (int) (d * 50))
-        ));
+
+        this.addDrawableChild(new DuplicatesSlider(j, k, 310, 20, Text.literal("Max Duplicated Sounds By Pos"), Configs.getInstance().maxDuplicatedSoundsByPos, 50, (d) ->
+                Configs.getInstance().maxDuplicatedSoundsByPos = Math.max(1, d))
+        );
+
+        this.addDrawableChild(new DuplicatesSlider(j, k + 25, 310, 20, Text.literal("Max Duplicated Sounds By Id"), Configs.getInstance().maxDuplicatedSoundsById , 200, (d) ->
+                Configs.getInstance().maxDuplicatedSoundsById = Math.max(1, d))
+        );
 
 
         this.addDrawableChild(
@@ -74,11 +78,11 @@ public class ThresholdConfigScreen extends Screen {
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrices);
-        DrawableHelper.drawCenteredText(matrices, this.textRenderer, this.title, this.width / 2, 15, 0xFFFFFF);
+    public void render(DrawContext context, int mouseX, int mouseY, float delta)  {
+        this.renderBackground(context);
+        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 15, 0xFFFFFF);
 
-        super.render(matrices, mouseX, mouseY, delta);
+        super.render(context, mouseX, mouseY, delta);
     }
 
     private static class ThresholdSlider extends SliderWidget {
@@ -95,7 +99,7 @@ public class ThresholdConfigScreen extends Screen {
 
         @Override
         protected void updateMessage() {
-            Text text = (float) this.value == (float) this.getYImage(false) ? ScreenTexts.OFF : Text.literal((int) (this.value * 100.0) + "%");
+            Text text = (float) this.value == (float) this.getYImage() ? ScreenTexts.OFF : Text.literal((int) (this.value * 100.0) + "%");
             this.setMessage(this.label.copy().append(": ").append(text));
         }
 
@@ -109,16 +113,25 @@ public class ThresholdConfigScreen extends Screen {
 
     private static class DuplicatesSlider extends ThresholdSlider {
 
-        public DuplicatesSlider(int x, int y, int width, int height, Text label, double value, Consumer<Double> callback) {
-            super(x, y, width, height, label, value, callback);
+        private final int max;
+        private final Consumer<Integer> callback;
+
+        public DuplicatesSlider(int x, int y, int width, int height, Text label, int value, int max, Consumer<Integer> callback) {
+            super(x, y, width, height, label, ((double)value / max), null);
+            this.max = max;
+            this.callback = callback;
+            this.updateMessage();
         }
 
         @Override
         protected void updateMessage() {
-            Text text = Text.literal(Math.max((int) (this.value * 50d), 1) + " sounds");
+            Text text = Text.literal(Math.max((int)(this.value * (double)max), 1) + " sounds");
             this.setMessage(this.label.copy().append(": ").append(text));
         }
 
-
+        @Override
+        protected void applyValue() {
+            this.callback.accept((int)( this.value * (double)max ));
+        }
     }
 }

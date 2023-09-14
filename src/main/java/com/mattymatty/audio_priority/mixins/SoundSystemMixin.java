@@ -1,5 +1,9 @@
 package com.mattymatty.audio_priority.mixins;
 
+import com.google.common.collect.Multimap;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.mattymatty.audio_priority.Configs;
 import com.mattymatty.audio_priority.client.AudioPriority;
 import com.mattymatty.audio_priority.exceptions.SoundPoolException;
@@ -9,17 +13,16 @@ import net.minecraft.client.sound.*;
 import net.minecraft.entity.Entity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -30,8 +33,11 @@ import java.util.stream.Collectors;
 
 @Mixin(SoundSystem.class)
 public abstract class SoundSystemMixin {
-    private final Map<SoundCategory, AtomicInteger> skippedByCategory = new HashMap<>();
+    @Unique
     private final Map<Vec3d, Map<Identifier, AtomicInteger>> playedByPos = new HashMap<>();
+    @Unique
+    private final Map<Identifier, AtomicInteger> playedByIdentifier = new HashMap<>();
+    @Unique
     Map<Integer, Set<SoundInstance>> soundsPerTick = new TreeMap<>();
     @Shadow
     private int ticks;
@@ -42,6 +48,7 @@ public abstract class SoundSystemMixin {
     @Final
     private SoundEngine soundEngine;
 
+    @Unique
     private static int sound_comparator(SoundInstance sound) {
         Vec3d playerPos = null;
         Entity client = MinecraftClient.getInstance().player;
@@ -55,7 +62,7 @@ public abstract class SoundSystemMixin {
 
         if (playerPos != null) {
             //nearest sounds get a higher priority
-            tie_break *= playerPos.distanceTo(new Vec3d(sound.getX(), sound.getY(), sound.getZ()));
+            tie_break *= (int)playerPos.distanceTo(new Vec3d(sound.getX(), sound.getY(), sound.getZ()));
         }
 
         return category * 10000 + Math.min(tie_break, 9999);
@@ -67,14 +74,19 @@ public abstract class SoundSystemMixin {
     @Shadow
     public abstract void play(SoundInstance sound, int delay);
 
+    @Shadow @Final private Multimap<SoundCategory, SoundInstance> sounds;
+
+    @Shadow @Final private Map<SoundInstance, Integer> soundEndTicks;
+
+    @Unique
     private Set<SoundInstance> getSoundList(int tick) {
         return soundsPerTick.computeIfAbsent(tick, k -> new LinkedHashSet<>());
     }
 
     //thorw an exception instead of just a log message ( allows me to skip successive play calls instead of spamming the logs )
-    @Redirect(method = "play(Lnet/minecraft/client/sound/SoundInstance;)V", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/CompletableFuture;join()Ljava/lang/Object;"))
-    Object except_on_full_sound_pool(CompletableFuture<Object> instance) {
-        Object ret = instance.join();
+    @WrapOperation(method = "play(Lnet/minecraft/client/sound/SoundInstance;)V", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/CompletableFuture;join()Ljava/lang/Object;"))
+    Object except_on_full_sound_pool(CompletableFuture<Object> instance, Operation<Object> original) {
+        Object ret = original.call(instance);
         if (ret == null)
             throw new SoundPoolException();
         return ret;
@@ -92,8 +104,8 @@ public abstract class SoundSystemMixin {
         this.getSoundList(this.ticks + delay).add(sound);
     }
 
-    @Inject(method = "tick()V", at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILEXCEPTION)
-    void schedule_repeating_play(CallbackInfo ci, Iterator iterator, Map.Entry entry, Channel.SourceManager sourceManager, SoundInstance soundInstance) {
+    @Inject(method = "tick()V", at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", shift = At.Shift.AFTER))
+    void schedule_repeating_play(CallbackInfo ci,@Local SoundInstance soundInstance) {
         //append scheduled sounds to my queue
         this.getSoundList(this.ticks + soundInstance.getRepeatDelay()).add(soundInstance);
     }
@@ -108,7 +120,7 @@ public abstract class SoundSystemMixin {
                 .filter(e -> tickKeys.contains(e.getKey()))
                 .flatMap(e -> e.getValue().stream())
                 .distinct()
-                .sorted(Comparator.comparing(SoundSystemMixin::sound_comparator))
+                .sorted(Comparator.comparingInt(SoundSystemMixin::sound_comparator))
                 .toList();
 
         long total = instances.size();
@@ -134,10 +146,6 @@ public abstract class SoundSystemMixin {
             instances.forEach(startTicks::remove);
         }
 
-        //clear the duplication list
-        playedByPos.forEach((k, m) -> m.clear()); //try and clear also potential memory leaks
-        playedByPos.clear();
-
         //remove due ticks from sound queue
         for (Integer key : tickKeys) {
             soundsPerTick.remove(key).clear();
@@ -146,17 +154,37 @@ public abstract class SoundSystemMixin {
         ci.cancel();
     }
 
+    @Inject(method = "stopAll", at = @At("HEAD"))
+    void stopAll(CallbackInfo ci){
+        //clear the duplication list
+        playedByPos.forEach((k, m) -> m.clear()); //try and clear also potential memory leaks
+        playedByPos.clear();
+
+        playedByIdentifier.clear();
+    }
+
+    @Inject(method = "tick()V", at = @At(value = "INVOKE", target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;", shift = At.Shift.AFTER))
+    void tickStoppedPlaying(CallbackInfo ci, @Local SoundInstance sound){
+        this.stopped_playing(sound);
+    }
+
+    @Inject(method = "stop(Lnet/minecraft/client/sound/SoundInstance;)V", at = @At(value = "HEAD"))
+    void stop_sound(SoundInstance sound, CallbackInfo ci){
+        this.stopped_playing(sound);
+    }
+
     //decide if to actually play or not a sound
     @Inject(cancellable = true, method = "play(Lnet/minecraft/client/sound/SoundInstance;)V", at = @At(value = "INVOKE_ASSIGN", ordinal = 0, target = "Lnet/minecraft/client/sound/Sound;isStreamed()Z"))
     void should_play_sound(SoundInstance sound, CallbackInfo ci) {
         SoundEngine.SourceSet streamingSources = ((SoundEngineAccessor) this.soundEngine).getStreamingSources();
         SoundEngine.SourceSet staticSources = ((SoundEngineAccessor) this.soundEngine).getStaticSources();
-        if (!should_play(sound, (sound.getSound().isStreamed()) ?/*WTF Mojang inverts the naming later*/staticSources : streamingSources)) {
+        if (!should_play(sound, (sound.getSound().isStreamed()) ? /*WTF Mojang inverts the naming later*/ staticSources : streamingSources)) {
             ci.cancel();
         }
     }
 
     //all maps get reset each sound engine tick
+    @Unique
     private boolean should_play(SoundInstance sound, SoundEngine.SourceSet dest) {
 
         //sounds that can be played outside the tick need to skip the duplication check
@@ -166,16 +194,23 @@ public abstract class SoundSystemMixin {
                     new Vec3d(Math.round(sound.getX()), Math.round(sound.getY()), Math.round(sound.getZ())),
                     (i) -> new HashMap<>());
 
-            AtomicInteger count = played_sounds.computeIfAbsent(sound.getId(), (i) -> new AtomicInteger());
+            AtomicInteger posCount = played_sounds.computeIfAbsent(sound.getId(), (i) -> new AtomicInteger());
+
+            AtomicInteger idCount = this.playedByIdentifier.computeIfAbsent(sound.getId(), (i) -> new AtomicInteger());
 
             //if there are too many duplicated sounds skip playing them
-            if (count.getAndIncrement() > Configs.getInstance().maxDuplicatedSounds) {
-                //if (!played_sounds.add(sound.getId())){
+            if (posCount.getAndIncrement() > Configs.getInstance().maxDuplicatedSoundsByPos) {
                 AudioPriority.LOGGER.debug("Duplicated Sound {} at {} {} {}, Skipped",
-                        sound.getId(),
+                        sound.getSound().getIdentifier(),
                         sound.getX(),
                         sound.getY(),
                         sound.getZ());
+                return false;
+            }
+
+            if (idCount.getAndIncrement() > Configs.getInstance().maxDuplicatedSoundsById) {
+                AudioPriority.LOGGER.debug("Duplicated Sound Id {}, Skipped",
+                        sound.getId());
                 return false;
             }
         }
@@ -192,4 +227,23 @@ public abstract class SoundSystemMixin {
         }
         return ret;
     }
+
+    @Unique
+    private void stopped_playing(SoundInstance sound){
+        Vec3d pos = new Vec3d(Math.round(sound.getX()), Math.round(sound.getY()), Math.round(sound.getZ()));
+        Map<Identifier, AtomicInteger> played_sounds = this.playedByPos.get(pos);
+        if (played_sounds != null) {
+            AtomicInteger posCount = played_sounds.get(sound.getId());
+            if (posCount != null && posCount.decrementAndGet() <= 0) {
+                played_sounds.remove(sound.getId());
+            }
+            if (played_sounds.isEmpty())
+                this.playedByPos.remove(pos);
+        }
+
+        AtomicInteger idCount = this.playedByIdentifier.get(sound.getId());
+        if (idCount != null && idCount.decrementAndGet() <= 0)
+            this.playedByIdentifier.remove(sound.getId());
+    }
+
 }

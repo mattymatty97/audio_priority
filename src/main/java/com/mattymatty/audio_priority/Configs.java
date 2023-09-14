@@ -17,7 +17,8 @@ public class Configs implements Serializable {
     public final Map<String, Integer> categoryClasses = new HashMap<>();
     public final Map<String, Double> maxPercentPerCategory = new HashMap<>();
     public final Set<String> instantCategories = new HashSet<>();
-    public Integer maxDuplicatedSounds;
+    public Integer maxDuplicatedSoundsByPos;
+    public Integer maxDuplicatedSoundsById;
 
     Configs() {
         categoryClasses.put(SoundCategory.MASTER.getName(), 0);
@@ -46,7 +47,8 @@ public class Configs implements Serializable {
         instantCategories.add(SoundCategory.MASTER.getName());
         instantCategories.add(SoundCategory.MUSIC.getName());
 
-        maxDuplicatedSounds = 5;
+        maxDuplicatedSoundsByPos = 5;
+        maxDuplicatedSoundsById = 50;
     }
 
     public static Configs getInstance() {

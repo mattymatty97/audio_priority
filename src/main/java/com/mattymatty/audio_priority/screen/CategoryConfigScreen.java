@@ -14,13 +14,10 @@ import java.io.IOException;
 import java.util.stream.IntStream;
 
 public class CategoryConfigScreen extends Screen {
-
-    protected final Screen origin;
     protected final Screen parent;
 
-    public CategoryConfigScreen(Screen parent, Screen origin) {
+    public CategoryConfigScreen(Screen parent) {
         super(Text.literal("Sound Category Priorities"));
-        this.origin = origin;
         this.parent = parent;
     }
 
@@ -57,8 +54,7 @@ public class CategoryConfigScreen extends Screen {
             ++i;
         }
 
-        this.addDrawableChild(ButtonWidget.builder(ScreenTexts.BACK, button -> this.client.setScreen(this.parent)).dimensions(this.width / 2 - 105, (int) (this.height * 0.9), 100, 20 ).build());
-        this.addDrawableChild(ButtonWidget.builder(ScreenTexts.DONE, button -> this.client.setScreen(this.origin)).dimensions(this.width / 2 + 5, (int) (this.height * 0.9), 100, 20 ).build());
+        this.addDrawableChild(ButtonWidget.builder(ScreenTexts.DONE, button -> this.client.setScreen(this.parent)).dimensions(this.width / 2 - 100, (int) (this.height * 0.9), 200, 20 ).build());
     }
 
 

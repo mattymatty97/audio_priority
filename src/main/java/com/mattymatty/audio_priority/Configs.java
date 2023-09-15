@@ -17,6 +17,7 @@ public class Configs implements Serializable {
     public final Map<String, Integer> categoryClasses = new HashMap<>();
     public final Map<String, Double> maxPercentPerCategory = new HashMap<>();
     public final Set<String> instantCategories = new HashSet<>();
+    public final Set<String> mutedSounds = new HashSet<>();
     public Integer maxDuplicatedSoundsByPos;
     public Integer maxDuplicatedSoundsById;
 

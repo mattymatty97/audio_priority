@@ -1,3 +1,4 @@
 accessWidener	v1	named
 accessible class net/minecraft/client/sound/SoundEngine$SourceSet
 accessible method net/minecraft/client/gui/widget/SliderWidget getYImage ()I
+accessible method net/minecraft/client/gui/screen/Screen addDrawableChild (Lnet/minecraft/client/gui/Element;)Lnet/minecraft/client/gui/Element;

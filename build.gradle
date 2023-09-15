@@ -123,12 +123,12 @@ tasks.register("FinalizeBuild", Copy) {
     into "output/libs"
     include "${project.archives_base_name}-${project.version}.jar"
     rename { String filename ->
-        return "${project.archives_base_name}-${project.version}-${project.minecraft_version} build ${buildnumber}.jar"
+        return "${project.archives_base_name}-${project.version} build ${buildnumber}.jar"
     }
     doLast {
         mkdir "output/libs"
         println "Output File:"
-        println "${project.archives_base_name}-${project.version}-${project.minecraft_version} build ${buildnumber}.jar"
+        println "${project.archives_base_name}-${project.version} build ${buildnumber}.jar"
     }
     outputs.upToDateWhen { false }
 }

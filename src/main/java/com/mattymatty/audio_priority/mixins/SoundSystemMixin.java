@@ -186,6 +186,9 @@ public abstract class SoundSystemMixin {
     //all maps get reset each sound engine tick
     @Unique
     private boolean should_play(SoundInstance sound, SoundEngine.SourceSet dest) {
+        //if sound is muted skip it
+        if (Configs.getInstance().mutedSounds.contains(sound.getId().toString()))
+            return false;
 
         //sounds that can be played outside the tick need to skip the duplication check
         if (!Configs.getInstance().instantCategories.contains(sound.getCategory().getName())) {

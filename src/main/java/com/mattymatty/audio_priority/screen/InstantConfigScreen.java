@@ -15,12 +15,10 @@ import java.util.List;
 
 public class InstantConfigScreen extends Screen {
 
-    protected final Screen origin;
     protected final Screen parent;
 
-    public InstantConfigScreen(Screen parent, Screen origin) {
+    public InstantConfigScreen(Screen parent) {
         super(Text.literal("Sound Categories allowed to bypass Priorities"));
-        this.origin = origin;
         this.parent = parent;
     }
 
@@ -63,11 +61,8 @@ public class InstantConfigScreen extends Screen {
         }
 
         this.addDrawableChild(
-                ButtonWidget.builder(ScreenTexts.BACK, button -> this.client.setScreen(this.parent))
-                        .dimensions(this.width / 2 - 105, (int) (this.height * 0.9), 100, 20).build());
-        this.addDrawableChild(
-                ButtonWidget.builder( ScreenTexts.DONE, button -> this.client.setScreen(this.origin))
-                        .dimensions(this.width / 2 + 5, (int) (this.height * 0.9), 100, 20).build());
+                ButtonWidget.builder( ScreenTexts.DONE, button -> this.client.setScreen(this.parent))
+                        .dimensions(this.width / 2 - 100, this.height- 28, 200, 20).build());
     }
 
 

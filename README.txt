@@ -39,7 +39,14 @@ NEUTRAL	cat 5 and up to 60%
 WEATHER	cat 6 and up to 50%
 AMBIENT	cat 6 and up to 50%
 
-maxDuplicatedSounds : 5
+maxDuplicatedSoundsByPos : 5
+maxDuplicatedSoundByID   : 50
+
+EDIT v1.2.4:
+    since this version a new menu is available to directly mute any soud. ( or the relative config line that lists the muted sound by their ID )
+
+    PLEASE if anybody good with UI sees this contact me, 
+    having to scroll though the entire list of sounds is quite a pain to do bu i dont know how to make a proper UI.
 
 PS:
 if you read all the way down here and you want to use this mod you can try inverting the priority categories while keeping the same thresholds

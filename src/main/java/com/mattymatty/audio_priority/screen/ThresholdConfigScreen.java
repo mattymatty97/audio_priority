@@ -32,7 +32,7 @@ public class ThresholdConfigScreen extends Screen {
     protected void init() {
         assert this.client != null;
 
-        ClickableListWidget listWidget = new ClickableListWidget(this.client, this.width, this.height - 64, 32, 25, this.width / 2 + 165);
+        ClickableListWidget listWidget = new ClickableListWidget(this.client, this.width, this.height - 64, 32, 25, 310);
 
         ThresholdSlider slider = new ThresholdSlider(0, 0, 310, 20, Text.translatable("soundCategory." + SoundCategory.MASTER.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(SoundCategory.MASTER.getName(), 0d), (d) ->
                 Configs.getInstance().maxPercentPerCategory.put(SoundCategory.MASTER.getName(), d)

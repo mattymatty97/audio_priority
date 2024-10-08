@@ -31,7 +31,7 @@ public class CategoryConfigScreen extends Screen {
     protected void init() {
         assert this.client != null;
 
-        ClickableListWidget listWidget = new ClickableListWidget(this.client, this.width, this.height - 64, 32, 25, this.width / 2 + 165);
+        ClickableListWidget listWidget = new ClickableListWidget(this.client, this.width, this.height - 64, 32, 25, 310);
 
         List<SoundCategory> soundCategories = Arrays.stream(SoundCategory.values()).filter(soundCategory -> soundCategory != SoundCategory.MASTER).toList();
 
@@ -43,9 +43,7 @@ public class CategoryConfigScreen extends Screen {
                         .initially(Configs.getInstance().categoryClasses.getOrDefault(SoundCategory.MASTER.getName(),0).toString())
                         .build(0, 0, 310, 20,
                                 Text.translatable("soundCategory." + SoundCategory.MASTER.getName())
-                                , (button, value) -> {
-                                    Configs.getInstance().categoryClasses.put(SoundCategory.MASTER.getName(), Integer.parseInt(value));
-                                })
+                                , (button, value) -> Configs.getInstance().categoryClasses.put(SoundCategory.MASTER.getName(), Integer.parseInt(value)))
         ));
 
         for (int i = 0; i < soundCategories.size(); i += 2) {
@@ -60,9 +58,7 @@ public class CategoryConfigScreen extends Screen {
                             .categoryClasses.getOrDefault(category.getName(),SoundCategory.values().length).toString())
                     .build(0, 0, 150, 20,
                             Text.translatable("soundCategory." + category.getName())
-                            , (button, value) -> {
-                                Configs.getInstance().categoryClasses.put(category.getName(), Integer.parseInt(value));
-                            });
+                            , (button, value) -> Configs.getInstance().categoryClasses.put(category.getName(), Integer.parseInt(value)));
 
             if (category2 != null){
                 widget2 = CyclingButtonWidget.builder(Text::literal)
@@ -71,9 +67,7 @@ public class CategoryConfigScreen extends Screen {
                                 .categoryClasses.getOrDefault(category2.getName(),SoundCategory.values().length).toString())
                         .build(160, 0, 150, 20,
                                 Text.translatable("soundCategory." + category2.getName())
-                                , (button, value) -> {
-                                    Configs.getInstance().categoryClasses.put(category2.getName(), Integer.parseInt(value));
-                                });
+                                , (button, value) -> Configs.getInstance().categoryClasses.put(category2.getName(), Integer.parseInt(value)));
                 listWidget.addEntry(new DoubleListWidgetEntry(widget1, widget2));
             }else{
                 listWidget.addEntry(new ListWidgetEntry(widget1));

@@ -6,10 +6,12 @@ import net.minecraft.client.gui.widget.ElementListWidget;
 public class ClickableListWidget extends ElementListWidget<AbstractListWidgetEntry> {
 
     private final int spacebarPositionX;
+    private final int rowWidth;
 
-    public ClickableListWidget(MinecraftClient minecraftClient, int width, int height, int top_padding, int itemHeight, int spacebarPositionX) {
+    public ClickableListWidget(MinecraftClient minecraftClient, int width, int height, int top_padding, int itemHeight, int rowWidth) {
         super(minecraftClient, width, height, top_padding, itemHeight);
-        this.spacebarPositionX = spacebarPositionX;
+        this.rowWidth = rowWidth;
+        this.spacebarPositionX = (width / 2) + (rowWidth / 2) + 10;
     }
 
     @Override
@@ -20,5 +22,10 @@ public class ClickableListWidget extends ElementListWidget<AbstractListWidgetEnt
     @Override
     public int getScrollbarX() {
         return spacebarPositionX;
+    }
+
+    @Override
+    public int getRowWidth() {
+        return rowWidth;
     }
 }

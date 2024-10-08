@@ -24,14 +24,14 @@ public class Configs implements Serializable {
     Configs() {
         categoryClasses.put(SoundCategory.MASTER.getName(), 0);
         categoryClasses.put(SoundCategory.VOICE.getName(), 0);
-        categoryClasses.put(SoundCategory.PLAYERS.getName(), 1);
-        categoryClasses.put(SoundCategory.HOSTILE.getName(), 2);
-        categoryClasses.put(SoundCategory.BLOCKS.getName(), 3);
-        categoryClasses.put(SoundCategory.MUSIC.getName(), 4);
-        categoryClasses.put(SoundCategory.RECORDS.getName(), 4);
-        categoryClasses.put(SoundCategory.NEUTRAL.getName(), 5);
-        categoryClasses.put(SoundCategory.WEATHER.getName(), 6);
-        categoryClasses.put(SoundCategory.AMBIENT.getName(), 6);
+        categoryClasses.put(SoundCategory.PLAYERS.getName(), 6);
+        categoryClasses.put(SoundCategory.HOSTILE.getName(), 5);
+        categoryClasses.put(SoundCategory.BLOCKS.getName(), 6);
+        categoryClasses.put(SoundCategory.MUSIC.getName(), 3);
+        categoryClasses.put(SoundCategory.RECORDS.getName(), 3);
+        categoryClasses.put(SoundCategory.NEUTRAL.getName(), 2);
+        categoryClasses.put(SoundCategory.WEATHER.getName(), 1);
+        categoryClasses.put(SoundCategory.AMBIENT.getName(), 1);
 
 
         maxPercentPerCategory.put(SoundCategory.MASTER.getName(), 1d);

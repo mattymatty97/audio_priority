@@ -1,20 +1,19 @@
 package com.mattymatty.audio_priority.screen;
 
-import com.google.common.base.CaseFormat;
-import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.mattymatty.audio_priority.Configs;
 import com.mattymatty.audio_priority.mixins.accessors.SoundManagerAccessor;
+import joptsimple.internal.Strings;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.screen.narration.NarrationPart;
-import net.minecraft.client.gui.screen.world.EditGameRulesScreen;
 import net.minecraft.client.gui.widget.*;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.MutableText;
@@ -22,8 +21,6 @@ import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
-import net.minecraft.world.GameRules;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -31,26 +28,49 @@ import java.util.*;
 public class MuteConfigScreen extends Screen {
     protected final Screen parent;
 
+    protected TextFieldWidget searchBox;
+    protected SoundListWidget soundList;
+
     public MuteConfigScreen(Screen parent) {
         super(Text.literal("Muted Sounds"));
         this.parent = parent;
     }
 
     @Override
+    public void tick() {
+        this.searchBox.tick();
+    }
+
+    @Override
+    public boolean charTyped(char chr, int modifiers) {
+        return this.searchBox.charTyped(chr, modifiers);
+    }
+
+    @Override
     protected void init() {
         super.init();
         assert this.client != null;
-        SoundListWidget soundListWidget = new SoundListWidget();
-        this.addDrawableChild(soundListWidget);
-        this.addDrawableChild(ButtonWidget.builder(ScreenTexts.DONE, button -> this.client.setScreen(this.parent)).dimensions(this.width / 2 - 100, (this.height) - 28, 200, 20 ).build());
+        this.searchBox = new TextFieldWidget(this.textRenderer, this.width / 2 - 100, 22, 200, 20, this.searchBox, Text.translatable("gui.recipebook.search_hint"));
+        this.searchBox.setChangedListener(search -> this.soundList.showSearch(search));
+        this.soundList = new SoundListWidget(this.client, this.width, this.height, 48, this.height - 32, 44);
+        this.addSelectableChild(this.searchBox);
+        this.addSelectableChild(this.soundList);
+        this.addDrawableChild(ButtonWidget.builder(ScreenTexts.DONE, button -> this.client.setScreen(this.parent)).dimensions(this.width / 2 - 100, (this.height) - 28, 200, 20).build());
+        this.setInitialFocus(this.searchBox);
     }
 
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        return super.keyPressed(keyCode, scanCode, modifiers) || this.searchBox.keyPressed(keyCode, scanCode, modifiers);
+    }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta)  {
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         this.renderBackground(context);
 
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 15, 0xFFFFFF);
+        this.soundList.render(context, mouseX, mouseY, delta);
+        this.searchBox.render(context, mouseX, mouseY, delta);
+        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 8, 16777215);
 
         super.render(context, mouseX, mouseY, delta);
     }
@@ -58,7 +78,10 @@ public class MuteConfigScreen extends Screen {
     @Environment(EnvType.CLIENT)
     public abstract static class AbstractSoundEntryWidget extends ElementListWidget.Entry<AbstractSoundEntryWidget> {
 
-        public AbstractSoundEntryWidget() {}
+        public AbstractSoundEntryWidget() {
+        }
+
+        public abstract boolean shouldShow(String search);
     }
 
     @Environment(EnvType.CLIENT)
@@ -67,6 +90,7 @@ public class MuteConfigScreen extends Screen {
         private final Identifier identifier;
 
         private final Text ruleName;
+        private final Text ruleSubtitle;
         private final List<OrderedText> name;
         private final List<OrderedText> subtitle;
         protected final List<ClickableWidget> children = Lists.<ClickableWidget>newArrayList();
@@ -77,24 +101,25 @@ public class MuteConfigScreen extends Screen {
             this.identifier = identifier;
             MutableText text = Text.literal(identifier.getPath());
             MutableText text2 = null;
-            if (name!=null) {
+            if (name != null) {
                 text2 = Text.literal("( ");
                 text2.append(name);
                 text2.append(Text.literal(" )"));
             }
             this.ruleName = text;
+            this.ruleSubtitle = name;
             assert MuteConfigScreen.this.client != null;
             this.name = MuteConfigScreen.this.client.textRenderer.wrapLines(this.ruleName, 200);
-            if (text2 != null){
+            if (text2 != null) {
                 this.subtitle = MuteConfigScreen.this.client.textRenderer.wrapLines(text2, 200);
-            }else{
+            } else {
                 this.subtitle = Collections.emptyList();
             }
             this.toggleButton = CyclingButtonWidget.onOffBuilder(!Configs.getInstance().mutedSounds.contains(identifier.toString()))
                     .omitKeyText()
                     .narration(button -> button.getGenericNarrationMessage().append("\n").append(this.ruleName))
                     .build(10, 5, 44, 20, name, (button, value) -> {
-                        if(!value)
+                        if (!value)
                             Configs.getInstance().mutedSounds.add(identifier.toString());
                         else
                             Configs.getInstance().mutedSounds.remove(identifier.toString());
@@ -128,7 +153,7 @@ public class MuteConfigScreen extends Screen {
                 texts.add(this.subtitle.get(1));
             }
             int index = 0;
-            for (OrderedText text : texts){
+            for (OrderedText text : texts) {
                 context.drawText(MuteConfigScreen.this.client.textRenderer, text, x, y + index * 10, 16777215, false);
                 index++;
             }
@@ -142,13 +167,17 @@ public class MuteConfigScreen extends Screen {
             this.toggleButton.render(context, mouseX, mouseY, tickDelta);
         }
 
-
+        public boolean shouldShow(String search) {
+            if (Strings.isNullOrEmpty(search))
+                return true;
+            return this.ruleName.getString().toLowerCase(Locale.ROOT).contains(search) || ( this.ruleSubtitle != null && this.ruleSubtitle.getString().toLowerCase(Locale.ROOT).contains(search) );
+        }
 
         public Text getRuleName() {
             return ruleName;
         }
 
-        public boolean getStatus(){
+        public boolean getStatus() {
             return !Configs.getInstance().mutedSounds.contains(this.identifier.toString());
         }
 
@@ -163,11 +192,20 @@ public class MuteConfigScreen extends Screen {
 
     @Environment(EnvType.CLIENT)
     public class SoundNamespaceWidget extends AbstractSoundEntryWidget {
+        private final List<AbstractSoundEntryWidget> sub_entries = new LinkedList<>();
         final Text name;
 
         public SoundNamespaceWidget(Text text) {
             super();
             this.name = text;
+        }
+
+        public void addSubEntry(AbstractSoundEntryWidget entry) {
+            this.sub_entries.add(entry);
+        }
+
+        public boolean shouldShow(String search) {
+            return sub_entries.stream().anyMatch(e -> e.shouldShow(search));
         }
 
         @Override
@@ -199,8 +237,19 @@ public class MuteConfigScreen extends Screen {
 
     @Environment(EnvType.CLIENT)
     public class SoundListWidget extends ElementListWidget<AbstractSoundEntryWidget> {
-        public SoundListWidget() {
-            super(MuteConfigScreen.this.client, MuteConfigScreen.this.width, MuteConfigScreen.this.height, 43, MuteConfigScreen.this.height - 32, 44);
+
+        List<AbstractSoundEntryWidget> sounds = new LinkedList<>();
+
+        public SoundListWidget(
+                MinecraftClient client,
+                int width,
+                int height,
+                int top,
+                int bottom,
+                int itemHeight
+        ) {
+            super(client, width, height, top, bottom, itemHeight);
+            //super(MuteConfigScreen.this.client, MuteConfigScreen.this.width, MuteConfigScreen.this.height, 43, MuteConfigScreen.this.height - 32, 44);
             final Map<String, List<SoundWidgetEntry>> sound_map = new LinkedHashMap<>();
 
             ((SoundManagerAccessor) this.client.getSoundManager()).getSounds().forEach((key, value) -> {
@@ -220,18 +269,33 @@ public class MuteConfigScreen extends Screen {
                     }))
                     .forEach(
                             entry -> {
-                                this.addEntry(
-                                        MuteConfigScreen.this.new SoundNamespaceWidget(
-                                                Text.literal(entry.getKey().toUpperCase()).formatted(Formatting.BOLD, Formatting.YELLOW)
-                                        )
+                                SoundNamespaceWidget namespaceWidget = new SoundNamespaceWidget(
+                                        Text.literal(entry.getKey().toUpperCase()).formatted(Formatting.BOLD, Formatting.YELLOW)
                                 );
+                                sounds.add(namespaceWidget);
                                 entry.getValue()
                                         .stream()
                                         .sorted()
-                                        .forEach(this::addEntry);
+                                        .forEach(e -> {
+                                            sounds.add(e);
+                                            namespaceWidget.addSubEntry(e);
+                                        });
                             }
                     );
+            showSearch(null);
         }
 
+        private void showSearch(String search) {
+            this.clearEntries();
+            if (search != null) {
+                search = search.toLowerCase(Locale.ROOT);
+            }
+
+            for (AbstractSoundEntryWidget soundEntry : sounds) {
+                if (soundEntry.shouldShow(search)) {
+                    this.addEntry(soundEntry);
+                }
+            }
+        }
     }
 }

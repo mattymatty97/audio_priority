@@ -1,11 +1,9 @@
 package com.mattymatty.audio_priority.mixins;
 
-import com.mattymatty.audio_priority.mixins.accessors.GameOptionsScreenAccessor;
 import com.mattymatty.audio_priority.mixins.accessors.ScreenAccessor;
 import com.mattymatty.audio_priority.screen.ConfigScreen;
 import net.minecraft.client.gui.screen.option.SoundOptionsScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

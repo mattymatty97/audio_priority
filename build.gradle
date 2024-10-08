@@ -1,6 +1,6 @@
 plugins {
-    id 'fabric-loom' version '1.2-SNAPSHOT'
-    id 'io.github.juuxel.loom-quiltflower' version '1.10.0'
+    id 'fabric-loom' version '1.7-SNAPSHOT'
+    //id 'io.github.juuxel.loom-vineflower' version '1.11.0'
     id 'maven-publish'
 }
 
@@ -19,9 +19,9 @@ dependencies {
 
     // Fabric API. This is technically optional, but you probably want it anyway.
     modCompileOnlyApi "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    modCompileOnlyApi "com.terraformersmc:modmenu:latest.release"
+    modCompileOnlyApi "com.terraformersmc:modmenu:7.2.2"
     implementation 'com.google.code.gson:gson:latest.release'
-    include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.2.0-rc.2")))
+    //include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.2.0-rc.2")))
 }
 
 loom {

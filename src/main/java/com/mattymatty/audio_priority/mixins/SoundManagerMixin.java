@@ -8,7 +8,6 @@ import net.minecraft.client.sound.SoundManager;
 import net.minecraft.client.sound.SoundSystem;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(SoundManager.class)
 public class SoundManagerMixin {

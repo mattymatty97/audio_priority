@@ -9,7 +9,10 @@ import com.mattymatty.audio_priority.client.AudioPriority;
 import com.mattymatty.audio_priority.exceptions.SoundPoolException;
 import com.mattymatty.audio_priority.mixins.accessors.SoundEngineAccessor;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.sound.*;
+import net.minecraft.client.sound.SoundEngine;
+import net.minecraft.client.sound.SoundInstance;
+import net.minecraft.client.sound.SoundSystem;
+import net.minecraft.client.sound.TickableSoundInstance;
 import net.minecraft.entity.Entity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Identifier;
@@ -163,7 +166,8 @@ public abstract class SoundSystemMixin {
         playedByIdentifier.clear();
     }
 
-    @Inject(method = "tick()V", at = @At(value = "INVOKE", target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;", shift = At.Shift.AFTER))
+    @Inject(method = "tick()V", at = @At(value = "INVOKE", target = "Ljava/util/Iterator;remove()V", shift = At.Shift.AFTER)
+            , slice = @Slice(from = @At(value = "INVOKE", target = "Ljava/util/Map;entrySet()Ljava/util/Set;", ordinal = 0), to  = @At(value = "INVOKE", target = "Ljava/util/Map;entrySet()Ljava/util/Set;", ordinal = 1)))
     void tickStoppedPlaying(CallbackInfo ci, @Local SoundInstance sound){
         this.stopped_playing(sound);
     }
@@ -176,6 +180,8 @@ public abstract class SoundSystemMixin {
     //decide if to actually play or not a sound
     @Inject(cancellable = true, method = "play(Lnet/minecraft/client/sound/SoundInstance;)V", at = @At(value = "INVOKE_ASSIGN", ordinal = 0, target = "Lnet/minecraft/client/sound/Sound;isStreamed()Z"))
     void should_play_sound(SoundInstance sound, CallbackInfo ci) {
+        if (sound == null)
+            return;
         SoundEngine.SourceSet streamingSources = ((SoundEngineAccessor) this.soundEngine).getStreamingSources();
         SoundEngine.SourceSet staticSources = ((SoundEngineAccessor) this.soundEngine).getStaticSources();
         if (!should_play(sound, (sound.getSound().isStreamed()) ? /*WTF Mojang inverts the naming later*/ staticSources : streamingSources)) {
@@ -186,6 +192,8 @@ public abstract class SoundSystemMixin {
     //all maps get reset each sound engine tick
     @Unique
     private boolean should_play(SoundInstance sound, SoundEngine.SourceSet dest) {
+        if (sound == null)
+            return false;
         //if sound is muted skip it
         if (Configs.getInstance().mutedSounds.contains(sound.getId().toString()))
             return false;
@@ -194,7 +202,7 @@ public abstract class SoundSystemMixin {
         if (!Configs.getInstance().instantCategories.contains(sound.getCategory().getName())) {
             //get duplicate map for this sound location ( Block Position )
             Map<Identifier, AtomicInteger> played_sounds = this.playedByPos.computeIfAbsent(
-                    new Vec3d(Math.round(sound.getX()), Math.round(sound.getY()), Math.round(sound.getZ())),
+                    new Vec3d(Math.floor(sound.getX()), Math.floor(sound.getY()), Math.floor(sound.getZ())),
                     (i) -> new HashMap<>());
 
             AtomicInteger posCount = played_sounds.computeIfAbsent(sound.getId(), (i) -> new AtomicInteger());
@@ -233,20 +241,22 @@ public abstract class SoundSystemMixin {
 
     @Unique
     private void stopped_playing(SoundInstance sound){
-        Vec3d pos = new Vec3d(Math.round(sound.getX()), Math.round(sound.getY()), Math.round(sound.getZ()));
-        Map<Identifier, AtomicInteger> played_sounds = this.playedByPos.get(pos);
-        if (played_sounds != null) {
-            AtomicInteger posCount = played_sounds.get(sound.getId());
-            if (posCount != null && posCount.decrementAndGet() <= 0) {
-                played_sounds.remove(sound.getId());
+        if (sound != null) {
+            Vec3d pos = new Vec3d(Math.floor(sound.getX()), Math.floor(sound.getY()), Math.floor(sound.getZ()));
+            Map<Identifier, AtomicInteger> played_sounds = this.playedByPos.get(pos);
+            if (played_sounds != null) {
+                AtomicInteger posCount = played_sounds.get(sound.getId());
+                if (posCount != null && posCount.decrementAndGet() <= 0) {
+                    played_sounds.remove(sound.getId());
+                }
+                if (played_sounds.isEmpty())
+                    this.playedByPos.remove(pos);
             }
-            if (played_sounds.isEmpty())
-                this.playedByPos.remove(pos);
-        }
 
-        AtomicInteger idCount = this.playedByIdentifier.get(sound.getId());
-        if (idCount != null && idCount.decrementAndGet() <= 0)
-            this.playedByIdentifier.remove(sound.getId());
+            AtomicInteger idCount = this.playedByIdentifier.get(sound.getId());
+            if (idCount != null && idCount.decrementAndGet() <= 0)
+                this.playedByIdentifier.remove(sound.getId());
+        }
     }
 
 }

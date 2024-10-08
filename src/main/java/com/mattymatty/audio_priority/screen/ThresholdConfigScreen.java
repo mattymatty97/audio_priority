@@ -6,8 +6,8 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.SliderWidget;
-import net.minecraft.sound.SoundCategory;
 import net.minecraft.screen.ScreenTexts;
+import net.minecraft.sound.SoundCategory;
 import net.minecraft.text.Text;
 
 import java.io.IOException;
@@ -94,7 +94,7 @@ public class ThresholdConfigScreen extends Screen {
 
         @Override
         protected void updateMessage() {
-            Text text = (float) this.value == (float) this.getYImage() ? ScreenTexts.OFF : Text.literal((int) (this.value * 100.0) + "%");
+            Text text = (float) this.value <= 0 ? ScreenTexts.OFF : Text.literal((int) (this.value * 100.0) + "%");
             this.setMessage(this.label.copy().append(": ").append(text));
         }
 

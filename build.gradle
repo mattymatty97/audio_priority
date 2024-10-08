@@ -18,7 +18,7 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     // Fabric API. This is technically optional, but you probably want it anyway.
-    modCompileOnlyApi "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    //modCompileOnlyApi "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modCompileOnlyApi "com.terraformersmc:modmenu:7.2.2"
     implementation 'com.google.code.gson:gson:latest.release'
     //include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.2.0-rc.2")))
@@ -29,11 +29,10 @@ loom {
 }
 
 processResources {
-    inputs.property "version", project.version
     filteringCharset "UTF-8"
 
     filesMatching("fabric.mod.json") {
-        expand "version": project.version
+        expand "project": project
     }
 }
 

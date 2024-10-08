@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "audio_engine_tweaks",
-  "version": "${version}",
+  "version": "${project.version}",
   "name": "Tweaks for Audio Engine",
   "description": "various improvements to the audio engine to avoid overloading",
   "authors": [
@@ -32,6 +32,6 @@
     "audio_priority.mixins.json"
   ],
   "depends": {
-    "minecraft": ["1.20.1"]
+    "minecraft": ["${project.minecraft_version}+"]
   }
 }

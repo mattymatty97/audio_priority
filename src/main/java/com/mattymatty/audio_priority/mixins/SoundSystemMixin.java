@@ -113,7 +113,7 @@ public abstract class SoundSystemMixin {
         this.getSoundList(this.ticks + soundInstance.getRepeatDelay()).add(soundInstance);
     }
 
-    //use my queue to play sounds ordering them with the priorities
+    //use my queue to play sounds, ordering them with the priorities
     @Inject(method = "tick()V", at = @At(value = "INVOKE", target = "Ljava/util/Set;iterator()Ljava/util/Iterator;", ordinal = 1, shift = At.Shift.BEFORE), cancellable = true)
     void play_current_tick_sounds(CallbackInfo ci) {
         //list due tick values

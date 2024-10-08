@@ -37,11 +37,6 @@ public class MuteConfigScreen extends Screen {
     }
 
     @Override
-    public void tick() {
-        this.searchBox.tick();
-    }
-
-    @Override
     public boolean charTyped(char chr, int modifiers) {
         return this.searchBox.charTyped(chr, modifiers);
     }
@@ -66,13 +61,13 @@ public class MuteConfigScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderBackground(context);
+        super.render(context, mouseX, mouseY, delta);
+        //this.renderBackground(context, mouseX, mouseY, delta);
 
         this.soundList.render(context, mouseX, mouseY, delta);
         this.searchBox.render(context, mouseX, mouseY, delta);
         context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 8, 16777215);
 
-        super.render(context, mouseX, mouseY, delta);
     }
 
     @Environment(EnvType.CLIENT)

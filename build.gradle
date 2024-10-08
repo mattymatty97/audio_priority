@@ -29,6 +29,7 @@ loom {
 }
 
 processResources {
+    outputs.upToDateWhen { false }
     filteringCharset "UTF-8"
 
     filesMatching("fabric.mod.json") {

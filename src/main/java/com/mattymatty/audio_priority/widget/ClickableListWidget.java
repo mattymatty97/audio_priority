@@ -18,7 +18,7 @@ public class ClickableListWidget extends ElementListWidget<AbstractListWidgetEnt
     }
 
     @Override
-    public int getScrollbarPositionX() {
+    public int getScrollbarX() {
         return spacebarPositionX;
     }
 }

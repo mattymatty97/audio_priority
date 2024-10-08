@@ -71,10 +71,6 @@ public class MuteConfigScreen extends Screen {
 
     @Environment(EnvType.CLIENT)
     public abstract static class AbstractSoundEntryWidget extends ElementListWidget.Entry<AbstractSoundEntryWidget> {
-
-        public AbstractSoundEntryWidget() {
-        }
-
         public abstract boolean shouldShow(String search);
     }
 

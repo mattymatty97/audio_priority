@@ -2,15 +2,20 @@ package com.mattymatty.audio_priority.screen;
 
 import com.mattymatty.audio_priority.Configs;
 import com.mattymatty.audio_priority.client.AudioPriority;
+import com.mattymatty.audio_priority.widget.ClickableListWidget;
+import com.mattymatty.audio_priority.widget.DoubleListWidgetEntry;
+import com.mattymatty.audio_priority.widget.ListWidgetEntry;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.text.Text;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 public class InstantConfigScreen extends Screen {
@@ -26,10 +31,15 @@ public class InstantConfigScreen extends Screen {
     protected void init() {
         assert this.client != null;
 
+        ClickableListWidget listWidget = new ClickableListWidget(this.client, this.width, this.height - 64, 32, 25, this.width / 2 + 165);
+
+        List<SoundCategory> soundCategories = Arrays.stream(SoundCategory.values()).filter(soundCategory -> soundCategory != SoundCategory.MASTER).toList();
+
+
         CyclingButtonWidget<String> btn = CyclingButtonWidget.builder(Text::literal)
                 .values(List.of(Boolean.FALSE.toString(), Boolean.TRUE.toString()))
                 .initially(Boolean.toString(Configs.getInstance().instantCategories.contains(SoundCategory.MASTER.getName())))
-                .build(this.width / 2 - 155, this.height / 6 - 12, 310, 20, Text.translatable("soundCategory." + SoundCategory.MASTER.getName())
+                .build(0, 0, 310, 20, Text.translatable("soundCategory." + SoundCategory.MASTER.getName())
                         , (button, value) -> {
                             if (Boolean.parseBoolean(value))
                                 Configs.getInstance().instantCategories.add(SoundCategory.MASTER.getName());
@@ -39,26 +49,46 @@ public class InstantConfigScreen extends Screen {
 
         btn.active = false;
 
+        listWidget.addEntry(new ListWidgetEntry(btn));
 
-        this.addDrawableChild(btn);
+        for (int i = 0; i < soundCategories.size(); i += 2) {
+            SoundCategory category = soundCategories.get(i);
+            SoundCategory category2 = i < soundCategories.size() -1 ? soundCategories.get(i + 1) : null;
+            ClickableWidget widget1;
+            ClickableWidget widget2;
 
-        int i = 2;
-        for (SoundCategory category : SoundCategory.values()) {
-            if (category == SoundCategory.MASTER) continue;
-            int j = this.width / 2 - 155 + i % 2 * 160;
-            int k = this.height / 6 - 12 + 24 * (i >> 1);
-            this.addDrawableChild(CyclingButtonWidget.builder(Text::literal)
+            widget1 = CyclingButtonWidget.builder(Text::literal)
                     .values(List.of(Boolean.FALSE.toString(), Boolean.TRUE.toString()))
                     .initially(Boolean.toString(Configs.getInstance().instantCategories.contains(category.getName())))
-                    .build(j, k, 150, 20, Text.translatable("soundCategory." + category.getName())
+                    .build(0, 0, 150, 20, Text.translatable("soundCategory." + category.getName())
                             , (button, value) -> {
                                 if (Boolean.parseBoolean(value))
                                     Configs.getInstance().instantCategories.add(category.getName());
                                 else
                                     Configs.getInstance().instantCategories.remove(category.getName());
-                            }));
-            ++i;
+                            });
+
+            if (category2 != null){
+                widget2 = CyclingButtonWidget.builder(Text::literal)
+                        .values(List.of(Boolean.FALSE.toString(), Boolean.TRUE.toString()))
+                        .initially(Boolean.toString(Configs.getInstance().instantCategories.contains(category2.getName())))
+                        .build(160, 0, 150, 20, Text.translatable("soundCategory." + category2.getName())
+                                , (button, value) -> {
+                                    if (Boolean.parseBoolean(value))
+                                        Configs.getInstance().instantCategories.add(category2.getName());
+                                    else
+                                        Configs.getInstance().instantCategories.remove(category2.getName());
+                                });
+
+                listWidget.addEntry(new DoubleListWidgetEntry(widget1, widget2));
+            }else {
+
+                listWidget.addEntry(new ListWidgetEntry(widget1));
+            }
+
         }
+
+        this.addDrawableChild(listWidget);
 
         this.addDrawableChild(
                 ButtonWidget.builder( ScreenTexts.DONE, button -> this.client.setScreen(this.parent))

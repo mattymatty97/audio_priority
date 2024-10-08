@@ -2,6 +2,10 @@ package com.mattymatty.audio_priority.screen;
 
 import com.mattymatty.audio_priority.Configs;
 import com.mattymatty.audio_priority.client.AudioPriority;
+import com.mattymatty.audio_priority.widget.ClickableListWidget;
+import com.mattymatty.audio_priority.widget.DoubleListWidgetEntry;
+import com.mattymatty.audio_priority.widget.ListWidgetEntry;
+import com.mattymatty.audio_priority.widget.SpacerListWidgetEntry;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -11,6 +15,8 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.text.Text;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class ThresholdConfigScreen extends Screen {
@@ -25,36 +31,51 @@ public class ThresholdConfigScreen extends Screen {
     @Override
     protected void init() {
         assert this.client != null;
-        ThresholdSlider slider = new ThresholdSlider(this.width / 2 - 155, this.height / 6 - 12, 310, 20, Text.translatable("soundCategory." + SoundCategory.MASTER.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(SoundCategory.MASTER.getName(), 0d), (d) ->
+
+        ClickableListWidget listWidget = new ClickableListWidget(this.client, this.width, this.height - 64, 32, 25, this.width / 2 + 165);
+
+        ThresholdSlider slider = new ThresholdSlider(0, 0, 310, 20, Text.translatable("soundCategory." + SoundCategory.MASTER.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(SoundCategory.MASTER.getName(), 0d), (d) ->
                 Configs.getInstance().maxPercentPerCategory.put(SoundCategory.MASTER.getName(), d)
         );
         slider.active = false;
-        this.addDrawableChild(slider);
-        int i = 2;
-        for (SoundCategory category : SoundCategory.values()) {
-            if (category == SoundCategory.MASTER) continue;
-            int j = this.width / 2 - 155 + i % 2 * 160;
-            int k = this.height / 6 - 12 + 24 * (i >> 1);
-            this.addDrawableChild(new ThresholdSlider(j, k, 150, 20, Text.translatable("soundCategory." + category.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(category.getName(), 0.1d), (d) ->
+
+        listWidget.addEntry(new ListWidgetEntry(slider));
+
+        List<SoundCategory> soundCategories = Arrays.stream(SoundCategory.values()).filter(soundCategory -> soundCategory != SoundCategory.MASTER).toList();
+
+        for (int i = 0; i < soundCategories.size(); i += 2) {
+            SoundCategory category = soundCategories.get(i);
+            SoundCategory category2 = i < soundCategories.size() -1 ? soundCategories.get(i + 1) : null;
+            ThresholdSlider slider1;
+            ThresholdSlider slider2;
+
+            slider1 = new ThresholdSlider(0, 0, 150, 20, Text.translatable("soundCategory." + category.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(category.getName(), 0.1d), (d) ->
                     Configs.getInstance().maxPercentPerCategory.put(category.getName(), d)
-            ));
-            ++i;
+            );
+
+            if (category2 != null){
+                slider2 = new ThresholdSlider(160, 0, 150, 20, Text.translatable("soundCategory." + category2.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(category2.getName(), 0.1d), (d) ->
+                        Configs.getInstance().maxPercentPerCategory.put(category2.getName(), d)
+                );
+                listWidget.addEntry(new DoubleListWidgetEntry(slider1, slider2));
+            }else{
+
+                listWidget.addEntry(new ListWidgetEntry(slider1));
+            }
+
         }
 
-        i += i % 2;
-        i += 2;
+        listWidget.addEntry(new SpacerListWidgetEntry());
 
-        int j = this.width / 2 - 155 + i % 2 * 160;
-        int k = this.height / 6 - 12 + 24 * (i >> 1);
+        listWidget.addEntry(new ListWidgetEntry(
+                new DuplicatesSlider(0, 0, 310, 20, Text.literal("Max Duplicated Sounds By Pos"), Configs.getInstance().maxDuplicatedSoundsByPos, 50, (d) ->
+                Configs.getInstance().maxDuplicatedSoundsByPos = Math.max(1, d))));
 
-        this.addDrawableChild(new DuplicatesSlider(j, k, 310, 20, Text.literal("Max Duplicated Sounds By Pos"), Configs.getInstance().maxDuplicatedSoundsByPos, 50, (d) ->
-                Configs.getInstance().maxDuplicatedSoundsByPos = Math.max(1, d))
-        );
+        listWidget.addEntry(new ListWidgetEntry(
+                new DuplicatesSlider(0, 0, 310, 20, Text.literal("Max Duplicated Sounds By Id"), Configs.getInstance().maxDuplicatedSoundsById , 200, (d) ->
+                Configs.getInstance().maxDuplicatedSoundsById = Math.max(1, d))));
 
-        this.addDrawableChild(new DuplicatesSlider(j, k + 25, 310, 20, Text.literal("Max Duplicated Sounds By Id"), Configs.getInstance().maxDuplicatedSoundsById , 200, (d) ->
-                Configs.getInstance().maxDuplicatedSoundsById = Math.max(1, d))
-        );
-
+        this.addDrawableChild(listWidget);
 
         this.addDrawableChild(
                 ButtonWidget.builder( ScreenTexts.DONE, button -> this.client.setScreen(this.parent))
@@ -102,7 +123,6 @@ public class ThresholdConfigScreen extends Screen {
             callback.accept(this.value);
         }
 
-
     }
 
     private static class DuplicatesSlider extends ThresholdSlider {
@@ -128,4 +148,5 @@ public class ThresholdConfigScreen extends Screen {
             this.callback.accept((int)( this.value * (double)max ));
         }
     }
+
 }

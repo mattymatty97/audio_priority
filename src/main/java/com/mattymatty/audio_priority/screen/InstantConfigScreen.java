@@ -3,8 +3,6 @@ package com.mattymatty.audio_priority.screen;
 import com.mattymatty.audio_priority.Configs;
 import com.mattymatty.audio_priority.client.AudioPriority;
 import com.mattymatty.audio_priority.widget.ClickableListWidget;
-import com.mattymatty.audio_priority.widget.DoubleListWidgetEntry;
-import com.mattymatty.audio_priority.widget.ListWidgetEntry;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -49,7 +47,7 @@ public class InstantConfigScreen extends Screen {
 
         btn.active = false;
 
-        listWidget.addEntry(new ListWidgetEntry(btn));
+        listWidget.addEntry(new ClickableListWidget.ListWidgetEntry(btn));
 
         for (int i = 0; i < soundCategories.size(); i += 2) {
             SoundCategory category = soundCategories.get(i);
@@ -80,10 +78,10 @@ public class InstantConfigScreen extends Screen {
                                         Configs.getInstance().instantCategories.remove(category2.getName());
                                 });
 
-                listWidget.addEntry(new DoubleListWidgetEntry(widget1, widget2));
+                listWidget.addEntry(new ClickableListWidget.ListWidgetEntry(widget1, widget2));
             }else {
 
-                listWidget.addEntry(new ListWidgetEntry(widget1));
+                listWidget.addEntry(new ClickableListWidget.ListWidgetEntry(widget1));
             }
 
         }

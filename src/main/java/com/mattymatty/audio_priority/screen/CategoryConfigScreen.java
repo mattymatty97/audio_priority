@@ -3,8 +3,6 @@ package com.mattymatty.audio_priority.screen;
 import com.mattymatty.audio_priority.Configs;
 import com.mattymatty.audio_priority.client.AudioPriority;
 import com.mattymatty.audio_priority.widget.ClickableListWidget;
-import com.mattymatty.audio_priority.widget.DoubleListWidgetEntry;
-import com.mattymatty.audio_priority.widget.ListWidgetEntry;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -37,7 +35,7 @@ public class CategoryConfigScreen extends Screen {
 
         int count = soundCategories.size() + 1;
 
-        listWidget.addEntry(new ListWidgetEntry(
+        listWidget.addEntry(new ClickableListWidget.ListWidgetEntry(
                 CyclingButtonWidget.builder(Text::literal)
                         .values(IntStream.range(0, count - 1).mapToObj(Integer::toString).toList())
                         .initially(Configs.getInstance().categoryClasses.getOrDefault(SoundCategory.MASTER.getName(),0).toString())
@@ -68,12 +66,10 @@ public class CategoryConfigScreen extends Screen {
                         .build(160, 0, 150, 20,
                                 Text.translatable("soundCategory." + category2.getName())
                                 , (button, value) -> Configs.getInstance().categoryClasses.put(category2.getName(), Integer.parseInt(value)));
-                listWidget.addEntry(new DoubleListWidgetEntry(widget1, widget2));
+                listWidget.addEntry(new ClickableListWidget.ListWidgetEntry(widget1, widget2));
             }else{
-                listWidget.addEntry(new ListWidgetEntry(widget1));
+                listWidget.addEntry(new ClickableListWidget.ListWidgetEntry(widget1));
             }
-
-
         }
 
         this.addDrawableChild(listWidget);

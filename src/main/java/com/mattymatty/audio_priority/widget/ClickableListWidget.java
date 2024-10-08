@@ -1,9 +1,17 @@
 package com.mattymatty.audio_priority.widget;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.Element;
+import net.minecraft.client.gui.Selectable;
+import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.ElementListWidget;
 
-public class ClickableListWidget extends ElementListWidget<AbstractListWidgetEntry> {
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+
+public class ClickableListWidget extends ElementListWidget<ClickableListWidget.AbstractListWidgetEntry> {
 
     private final int spacebarPositionX;
     private final int rowWidth;
@@ -27,5 +35,62 @@ public class ClickableListWidget extends ElementListWidget<AbstractListWidgetEnt
     @Override
     public int getRowWidth() {
         return rowWidth;
+    }
+    
+
+    public abstract static class AbstractListWidgetEntry extends Entry<AbstractListWidgetEntry> {}
+
+
+    public static class ListWidgetEntry extends AbstractListWidgetEntry {
+
+        private final List<WidgetHolder> widgets = new LinkedList<>();
+
+        public ListWidgetEntry(ClickableWidget...widgets) {
+            Arrays.stream(widgets).map(WidgetHolder::new).forEach(this.widgets::add);
+        }
+
+        @Override
+        public List<? extends Selectable> selectableChildren() {
+            return List.of();
+        }
+
+        @Override
+        public List<? extends Element> children() {
+            return widgets.stream().map(WidgetHolder::getWidget).toList();
+        }
+
+        @Override
+        public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+            for (WidgetHolder holder : widgets) {
+                holder.widget.setX(x + entryWidth / 2 - 155 + holder.getDx());
+                holder.widget.setY(y + holder.getDy());
+                holder.widget.render(context, mouseX, mouseY, tickDelta);
+            }
+        }
+
+        public static class WidgetHolder{
+            private final ClickableWidget widget;
+
+            private final int dx;
+            private final int dy;
+
+            public ClickableWidget getWidget() {
+                return widget;
+            }
+
+            public int getDx() {
+                return dx;
+            }
+
+            public int getDy() {
+                return dy;
+            }
+
+            public WidgetHolder(ClickableWidget widget) {
+                this.widget = widget;
+                this.dx = widget.getX();
+                this.dy = widget.getY();
+            }
+        }
     }
 }

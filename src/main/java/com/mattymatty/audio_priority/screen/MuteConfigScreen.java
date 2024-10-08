@@ -4,8 +4,6 @@ import com.google.common.collect.ImmutableList;
 import com.mattymatty.audio_priority.Configs;
 import com.mattymatty.audio_priority.mixins.accessors.SoundManagerAccessor;
 import joptsimple.internal.Strings;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
@@ -47,6 +45,7 @@ public class MuteConfigScreen extends Screen {
         this.searchBox = new TextFieldWidget(this.textRenderer, this.width / 2 - 100, 22, 200, 20, this.searchBox, Text.translatable("gui.recipebook.search_hint"));
         this.searchBox.setChangedListener(search -> this.soundList.showSearch(search));
         this.soundList = new SoundListWidget(this.client, this.width, this.height - 32 - 48, 48, 44);
+        this.soundList.showSearch(this.searchBox.getText());
         this.addSelectableChild(this.searchBox);
         this.addDrawableChild(this.soundList);
         this.addDrawableChild(ButtonWidget.builder(ScreenTexts.DONE, button -> this.client.setScreen(this.parent)).dimensions(this.width / 2 - 100, (this.height) - 28, 200, 20).build());
@@ -69,12 +68,11 @@ public class MuteConfigScreen extends Screen {
 
     }
 
-    @Environment(EnvType.CLIENT)
     public abstract static class AbstractSoundEntryWidget extends ElementListWidget.Entry<AbstractSoundEntryWidget> {
         public abstract boolean shouldShow(String search);
     }
 
-    @Environment(EnvType.CLIENT)
+
     public class SoundWidgetEntry extends AbstractSoundEntryWidget implements Comparable<SoundWidgetEntry> {
 
         private final Identifier identifier;
@@ -180,7 +178,6 @@ public class MuteConfigScreen extends Screen {
         }
     }
 
-    @Environment(EnvType.CLIENT)
     public class SoundNamespaceWidget extends AbstractSoundEntryWidget {
         private final List<AbstractSoundEntryWidget> sub_entries = new LinkedList<>();
         final Text name;
@@ -225,7 +222,7 @@ public class MuteConfigScreen extends Screen {
         }
     }
 
-    @Environment(EnvType.CLIENT)
+
     public class SoundListWidget extends ElementListWidget<AbstractSoundEntryWidget> {
 
         List<AbstractSoundEntryWidget> sounds = new LinkedList<>();
@@ -271,7 +268,7 @@ public class MuteConfigScreen extends Screen {
                                         });
                             }
                     );
-            showSearch(null);
+            this.showSearch(null);
         }
 
         private void showSearch(String search) {

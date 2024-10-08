@@ -1,7 +1,6 @@
 package com.mattymatty.audio_priority.screen;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.mattymatty.audio_priority.Configs;
 import com.mattymatty.audio_priority.mixins.accessors.SoundManagerAccessor;
 import joptsimple.internal.Strings;
@@ -47,9 +46,9 @@ public class MuteConfigScreen extends Screen {
         assert this.client != null;
         this.searchBox = new TextFieldWidget(this.textRenderer, this.width / 2 - 100, 22, 200, 20, this.searchBox, Text.translatable("gui.recipebook.search_hint"));
         this.searchBox.setChangedListener(search -> this.soundList.showSearch(search));
-        this.soundList = new SoundListWidget(this.client, this.width, this.height, 48, this.height - 32, 44);
+        this.soundList = new SoundListWidget(this.client, this.width, this.height - 32 - 48, 48, 44);
         this.addSelectableChild(this.searchBox);
-        this.addSelectableChild(this.soundList);
+        this.addDrawableChild(this.soundList);
         this.addDrawableChild(ButtonWidget.builder(ScreenTexts.DONE, button -> this.client.setScreen(this.parent)).dimensions(this.width / 2 - 100, (this.height) - 28, 200, 20).build());
         this.setInitialFocus(this.searchBox);
     }
@@ -64,7 +63,7 @@ public class MuteConfigScreen extends Screen {
         super.render(context, mouseX, mouseY, delta);
         //this.renderBackground(context, mouseX, mouseY, delta);
 
-        this.soundList.render(context, mouseX, mouseY, delta);
+        this.soundList.renderWidget(context, mouseX, mouseY, delta);
         this.searchBox.render(context, mouseX, mouseY, delta);
         context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 8, 16777215);
 
@@ -88,7 +87,7 @@ public class MuteConfigScreen extends Screen {
         private final Text ruleSubtitle;
         private final List<OrderedText> name;
         private final List<OrderedText> subtitle;
-        protected final List<ClickableWidget> children = Lists.<ClickableWidget>newArrayList();
+        protected final List<ClickableWidget> children = new LinkedList<>();
         private final CyclingButtonWidget<Boolean> toggleButton;
 
         public SoundWidgetEntry(Text name, Identifier identifier) {
@@ -240,10 +239,9 @@ public class MuteConfigScreen extends Screen {
                 int width,
                 int height,
                 int top,
-                int bottom,
                 int itemHeight
         ) {
-            super(client, width, height, top, bottom, itemHeight);
+            super(client, width, height, top, itemHeight);
             //super(MuteConfigScreen.this.client, MuteConfigScreen.this.width, MuteConfigScreen.this.height, 43, MuteConfigScreen.this.height - 32, 44);
             final Map<String, List<SoundWidgetEntry>> sound_map = new LinkedHashMap<>();
 

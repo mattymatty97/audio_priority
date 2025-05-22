@@ -4,15 +4,13 @@ import com.google.common.collect.Multimap;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
+import com.llamalad7.mixinextras.sugar.ref.LocalFloatRef;
 import com.mattymatty.audio_priority.Configs;
 import com.mattymatty.audio_priority.client.AudioPriority;
 import com.mattymatty.audio_priority.exceptions.SoundPoolException;
 import com.mattymatty.audio_priority.mixins.accessors.SoundEngineAccessor;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.sound.SoundEngine;
-import net.minecraft.client.sound.SoundInstance;
-import net.minecraft.client.sound.SoundSystem;
-import net.minecraft.client.sound.TickableSoundInstance;
+import net.minecraft.client.sound.*;
 import net.minecraft.entity.Entity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Identifier;
@@ -46,7 +44,7 @@ public abstract class SoundSystemMixin {
     private int ticks;
     @Shadow
     @Final
-    private Map<SoundInstance, Integer> startTicks;
+    private Map<SoundInstance, Integer> soundStartTicks;
     @Shadow
     @Final
     private SoundEngine soundEngine;
@@ -140,13 +138,13 @@ public abstract class SoundSystemMixin {
                 }
                 count++;
                 //remove them from vanilla queue too
-                this.startTicks.remove(soundInstance);
+                this.soundStartTicks.remove(soundInstance);
             }
         } catch (SoundPoolException ex) {
             //this should not be called anymore cause the play method now uses a threshold to decide whenever to actually play a sound or skip it
             AudioPriority.LOGGER.warn("Sound pool full, Skipped {} sound events", total - count);
             //remove all missing from vanilla queue ( full skip )
-            instances.forEach(startTicks::remove);
+            instances.forEach(soundStartTicks::remove);
         }
 
         //remove due ticks from sound queue
@@ -179,13 +177,17 @@ public abstract class SoundSystemMixin {
 
     //decide if to actually play or not a sound
     @Inject(cancellable = true, method = "play(Lnet/minecraft/client/sound/SoundInstance;)V", at = @At(value = "INVOKE_ASSIGN", ordinal = 0, target = "Lnet/minecraft/client/sound/Sound;isStreamed()Z"))
-    void should_play_sound(SoundInstance sound, CallbackInfo ci) {
+    void should_play_sound(SoundInstance sound, CallbackInfo ci, @Local(name = "h") LocalFloatRef volume) {
         if (sound == null)
             return;
         SoundEngine.SourceSet streamingSources = ((SoundEngineAccessor) this.soundEngine).getStreamingSources();
         SoundEngine.SourceSet staticSources = ((SoundEngineAccessor) this.soundEngine).getStaticSources();
-        if (!should_play(sound, (sound.getSound().isStreamed()) ? /*WTF Mojang inverts the naming later*/ staticSources : streamingSources)) {
+
+        float volumeMultiplier = Configs.getInstance().soundVolumes.getOrDefault(sound.getId().toString(), 1f);
+        if (volumeMultiplier <= 0f || !should_play(sound, (sound.getSound().isStreamed()) ? /*WTF Mojang inverts the naming later*/ staticSources : streamingSources)) {
             ci.cancel();
+        }else{
+            volume.set(volume.get() * volumeMultiplier);
         }
     }
 
@@ -193,9 +195,6 @@ public abstract class SoundSystemMixin {
     @Unique
     private boolean should_play(SoundInstance sound, SoundEngine.SourceSet dest) {
         if (sound == null)
-            return false;
-        //if sound is muted skip it
-        if (Configs.getInstance().mutedSounds.contains(sound.getId().toString()))
             return false;
 
         //sounds that can be played outside the tick need to skip the duplication check
@@ -228,7 +227,7 @@ public abstract class SoundSystemMixin {
 
         int sound_count = dest.getSourceCount();
         int max_count = dest.getMaxSourceCount();
-        double percentage = Configs.getInstance().maxPercentPerCategory.getOrDefault(sound.getCategory().getName(), 0.1d);
+        float percentage = Configs.getInstance().maxPercentPerCategory.getOrDefault(sound.getCategory().getName(), 0.1f);
         // check the sound pool fill level and compare it to the threshold for the current category
         boolean ret = (sound_count < (max_count) * percentage);
         if (!ret) {

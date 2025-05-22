@@ -31,8 +31,8 @@ public class ThresholdConfigScreen extends Screen {
 
         ClickableListWidget listWidget = new ClickableListWidget(this.client, this.width, this.height - 64, 32, 25, 310);
 
-        ThresholdSlider slider = new ThresholdSlider(0, 0, 310, 20, Text.translatable("soundCategory." + SoundCategory.MASTER.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(SoundCategory.MASTER.getName(), 0d), (d) ->
-                Configs.getInstance().maxPercentPerCategory.put(SoundCategory.MASTER.getName(), d)
+        ThresholdSlider slider = new ThresholdSlider(0, 0, 310, 20, Text.translatable("soundCategory." + SoundCategory.MASTER.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(SoundCategory.MASTER.getName(), 0f), (d) ->
+                Configs.getInstance().maxPercentPerCategory.put(SoundCategory.MASTER.getName(), (float)(double)d)
         );
         slider.active = false;
 
@@ -46,13 +46,13 @@ public class ThresholdConfigScreen extends Screen {
             ThresholdSlider slider1;
             ThresholdSlider slider2;
 
-            slider1 = new ThresholdSlider(0, 0, 150, 20, Text.translatable("soundCategory." + category.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(category.getName(), 0.1d), (d) ->
-                    Configs.getInstance().maxPercentPerCategory.put(category.getName(), d)
+            slider1 = new ThresholdSlider(0, 0, 150, 20, Text.translatable("soundCategory." + category.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(category.getName(), 0.1f), (d) ->
+                    Configs.getInstance().maxPercentPerCategory.put(category.getName(), (float)(double)d)
             );
 
             if (category2 != null){
-                slider2 = new ThresholdSlider(160, 0, 150, 20, Text.translatable("soundCategory." + category2.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(category2.getName(), 0.1d), (d) ->
-                        Configs.getInstance().maxPercentPerCategory.put(category2.getName(), d)
+                slider2 = new ThresholdSlider(160, 0, 150, 20, Text.translatable("soundCategory." + category2.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(category2.getName(), 0.1f), (d) ->
+                        Configs.getInstance().maxPercentPerCategory.put(category2.getName(), (float)(double)d)
                 );
                 listWidget.addEntry(new ClickableListWidget.ListWidgetEntry(slider1, slider2));
             }else{

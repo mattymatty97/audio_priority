@@ -1,6 +1,5 @@
 plugins {
-    id 'fabric-loom' version '1.7-SNAPSHOT'
-    //id 'io.github.juuxel.loom-vineflower' version '1.11.0'
+    id 'fabric-loom' version "${loom_version}"
     id 'maven-publish'
 }
 
@@ -20,8 +19,6 @@ dependencies {
     // Fabric API. This is technically optional, but you probably want it anyway.
     //modCompileOnlyApi "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modCompileOnlyApi "com.terraformersmc:modmenu:7.2.2"
-    implementation 'com.google.code.gson:gson:latest.release'
-    //include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.2.0-rc.2")))
 }
 
 loom {
@@ -64,23 +61,6 @@ java {
 jar {
     from("LICENSE") {
         rename { "${it}_${project.archivesBaseName}" }
-    }
-}
-
-// configure the maven publication
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-        }
-    }
-
-    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-    repositories {
-        // Add repositories to publish to here.
-        // Notice: This block does NOT have the same function as the block in the top level.
-        // The repositories here will be used for publishing your artifact, not for
-        // retrieving dependencies.
     }
 }
 

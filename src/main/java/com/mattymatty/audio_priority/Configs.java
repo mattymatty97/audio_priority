@@ -1,10 +1,7 @@
 package com.mattymatty.audio_priority;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.sound.SoundCategory;
 

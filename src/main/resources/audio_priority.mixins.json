@@ -9,7 +9,6 @@
     "defaultRequire": 1
   },
   "client": [
-    "SoundManagerMixin",
     "SoundOptionsScreenMixin",
     "SoundSystemMixin",
     "accessors.GameOptionsScreenAccessor",

@@ -24,6 +24,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -70,7 +71,7 @@ public abstract class SoundSystemMixin {
     }
 
     @Shadow
-    public abstract void play(SoundInstance sound);
+    public abstract SoundSystem.PlayResult play(SoundInstance sound);
 
     @Shadow
     public abstract void play(SoundInstance sound, int delay);
@@ -85,7 +86,7 @@ public abstract class SoundSystemMixin {
     }
 
     //thorw an exception instead of just a log message ( allows me to skip successive play calls instead of spamming the logs )
-    @WrapOperation(method = "play(Lnet/minecraft/client/sound/SoundInstance;)V", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/CompletableFuture;join()Ljava/lang/Object;"))
+    @WrapOperation(method = "play(Lnet/minecraft/client/sound/SoundInstance;)Lnet/minecraft/client/sound/SoundSystem$PlayResult;", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/CompletableFuture;join()Ljava/lang/Object;"))
     Object except_on_full_sound_pool(CompletableFuture<Object> instance, Operation<Object> original) {
         Object ret = original.call(instance);
         if (ret == null)
@@ -176,16 +177,19 @@ public abstract class SoundSystemMixin {
     }
 
     //decide if to actually play or not a sound
-    @Inject(cancellable = true, method = "play(Lnet/minecraft/client/sound/SoundInstance;)V", at = @At(value = "INVOKE_ASSIGN", ordinal = 0, target = "Lnet/minecraft/client/sound/Sound;isStreamed()Z"))
-    void should_play_sound(SoundInstance sound, CallbackInfo ci, @Local(ordinal = 2) LocalFloatRef volume) {
+    @Inject(cancellable = true, method = "play(Lnet/minecraft/client/sound/SoundInstance;)Lnet/minecraft/client/sound/SoundSystem$PlayResult;", at = @At(value = "INVOKE_ASSIGN", ordinal = 0, target = "Lnet/minecraft/client/sound/Sound;isStreamed()Z"))
+    void should_play_sound(SoundInstance sound, CallbackInfoReturnable<SoundSystem.PlayResult> cir, @Local(ordinal = 2) LocalFloatRef volume) {
         if (sound == null)
             return;
         SoundEngine.SourceSet streamingSources = ((SoundEngineAccessor) this.soundEngine).getStreamingSources();
         SoundEngine.SourceSet staticSources = ((SoundEngineAccessor) this.soundEngine).getStaticSources();
 
         float volumeMultiplier = Configs.getInstance().soundVolumes.getOrDefault(sound.getId().toString(), 1f);
-        if (volumeMultiplier <= 0f || !should_play(sound, (sound.getSound().isStreamed()) ? /*WTF Mojang inverts the naming later*/ staticSources : streamingSources)) {
-            ci.cancel();
+        //WTF the mappings use inverted naming for some reason (@see Lnet/minecraft/client/sound/SoundEngine;createSource(Lnet/minecraft/client/sound/SoundEngine$RunMode;)Lnet/minecraft/client/sound/Source;)
+        SoundEngine.SourceSet sourceSet = (sound.getSound().isStreamed()) ? staticSources : streamingSources;
+        if (volumeMultiplier <= 0f || !should_play(sound, sourceSet)) {
+            cir.setReturnValue(SoundSystem.PlayResult.STARTED_SILENTLY);
+            cir.cancel();
         }else{
             volume.set(volume.get() * volumeMultiplier);
         }

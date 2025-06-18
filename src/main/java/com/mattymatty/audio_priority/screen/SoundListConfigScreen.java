@@ -16,6 +16,7 @@ import net.minecraft.client.gui.widget.*;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import net.minecraft.util.Colors;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
@@ -141,7 +142,7 @@ public class SoundListConfigScreen extends Screen {
                 texts.add(this.name);
             }
             if (this.subtitle != null) {
-                texts.add(this.subtitle);
+                texts.add(this.subtitle.copy().formatted(Formatting.GRAY));
             }
             int index = 0;
 
@@ -154,10 +155,10 @@ public class SoundListConfigScreen extends Screen {
             if (texts.size() == 1){
                 offset = renderer.fontHeight / 2 + 3;
             }
-
+            TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
             for (Text text : texts) {
                 int textWidth = renderer.getWidth(text);
-                context.drawText(renderer, text, textEnd - textWidth, y + offset + index * (renderer.fontHeight + 1), 16777215, false);
+                context.drawTextWithShadow(textRenderer, text, textEnd - textWidth, y + offset + index * (textRenderer.fontHeight + 1),  Colors.WHITE);
                 index++;
             }
         }
@@ -213,7 +214,7 @@ public class SoundListConfigScreen extends Screen {
         @Override
         public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             assert SoundListConfigScreen.this.client != null;
-            context.drawCenteredTextWithShadow(SoundListConfigScreen.this.client.textRenderer, this.name, x + entryWidth / 2, y + 5, 16777215);
+            context.drawCenteredTextWithShadow(SoundListConfigScreen.this.client.textRenderer, this.name, x + entryWidth / 2, y + 5,  Colors.WHITE);
         }
 
         @Override

@@ -36,7 +36,7 @@ public class ThresholdConfigScreen extends Screen {
         );
         slider.active = false;
 
-        listWidget.addEntry(new ClickableListWidget.ListWidgetEntry(slider));
+        listWidget.addEntry(slider);
 
         List<SoundCategory> soundCategories = Arrays.stream(SoundCategory.values()).filter(soundCategory -> soundCategory != SoundCategory.MASTER).toList();
 
@@ -54,23 +54,23 @@ public class ThresholdConfigScreen extends Screen {
                 slider2 = new ThresholdSlider(160, 0, 150, 20, Text.translatable("soundCategory." + category2.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(category2.getName(), 0.1f), (d) ->
                         Configs.getInstance().maxPercentPerCategory.put(category2.getName(), (float)(double)d)
                 );
-                listWidget.addEntry(new ClickableListWidget.ListWidgetEntry(slider1, slider2));
+                listWidget.addEntry(slider1, slider2);
             }else{
 
-                listWidget.addEntry(new ClickableListWidget.ListWidgetEntry(slider1));
+                listWidget.addEntry(slider1);
             }
 
         }
 
-        listWidget.addEntry(new ClickableListWidget.ListWidgetEntry());
+        listWidget.addEntry();
 
-        listWidget.addEntry(new ClickableListWidget.ListWidgetEntry(
+        listWidget.addEntry(
                 new DuplicatesSlider(0, 0, 310, 20, Text.literal("Max Duplicated Sounds By Pos"), Configs.getInstance().maxDuplicatedSoundsByPos, 50, (d) ->
-                Configs.getInstance().maxDuplicatedSoundsByPos = Math.max(1, d))));
+                Configs.getInstance().maxDuplicatedSoundsByPos = Math.max(1, d)));
 
-        listWidget.addEntry(new ClickableListWidget.ListWidgetEntry(
+        listWidget.addEntry(
                 new DuplicatesSlider(0, 0, 310, 20, Text.literal("Max Duplicated Sounds By Id"), Configs.getInstance().maxDuplicatedSoundsById , 200, (d) ->
-                Configs.getInstance().maxDuplicatedSoundsById = Math.max(1, d))));
+                Configs.getInstance().maxDuplicatedSoundsById = Math.max(1, d)));
 
         this.addDrawableChild(listWidget);
 

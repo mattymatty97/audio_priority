@@ -55,7 +55,7 @@ public abstract class SoundSystemMixin {
         Vec3d playerPos = null;
         Entity client = MinecraftClient.getInstance().player;
         if (client != null) {
-            playerPos = client.getPos();
+            playerPos = client.getEntityPos();
         }
 
         int category = Configs.getInstance().categoryClasses.getOrDefault(sound.getCategory().getName(), SoundCategory.values().length);

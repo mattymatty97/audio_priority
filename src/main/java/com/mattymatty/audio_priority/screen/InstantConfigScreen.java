@@ -47,7 +47,7 @@ public class InstantConfigScreen extends Screen {
 
         btn.active = false;
 
-        listWidget.addEntry(new ClickableListWidget.ListWidgetEntry(btn));
+        listWidget.addEntry(btn);
 
         for (int i = 0; i < soundCategories.size(); i += 2) {
             SoundCategory category = soundCategories.get(i);
@@ -78,10 +78,10 @@ public class InstantConfigScreen extends Screen {
                                         Configs.getInstance().instantCategories.remove(category2.getName());
                                 });
 
-                listWidget.addEntry(new ClickableListWidget.ListWidgetEntry(widget1, widget2));
+                listWidget.addEntry(widget1, widget2);
             }else {
 
-                listWidget.addEntry(new ClickableListWidget.ListWidgetEntry(widget1));
+                listWidget.addEntry(widget1);
             }
 
         }

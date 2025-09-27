@@ -22,6 +22,10 @@ public class ClickableListWidget extends ElementListWidget<ClickableListWidget.A
         this.spacebarPositionX = (width / 2) + (rowWidth / 2) + 10;
     }
 
+    public int addEntry(ClickableWidget...widgets){
+        return super.addEntry(new ClickableListWidget.ListWidgetEntry(widgets));
+    }
+
     @Override
     public int addEntry(AbstractListWidgetEntry entry){
         return super.addEntry(entry);
@@ -38,10 +42,9 @@ public class ClickableListWidget extends ElementListWidget<ClickableListWidget.A
     }
     
 
-    public abstract static class AbstractListWidgetEntry extends Entry<AbstractListWidgetEntry> {}
+    public abstract class AbstractListWidgetEntry extends Entry<AbstractListWidgetEntry> {}
 
-
-    public static class ListWidgetEntry extends AbstractListWidgetEntry {
+    public class ListWidgetEntry extends AbstractListWidgetEntry {
 
         private final List<WidgetHolder> widgets = new LinkedList<>();
 
@@ -60,11 +63,11 @@ public class ClickableListWidget extends ElementListWidget<ClickableListWidget.A
         }
 
         @Override
-        public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+        public void render(DrawContext context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
             for (WidgetHolder holder : widgets) {
-                holder.widget.setX(x + entryWidth / 2 - 155 + holder.getDx());
-                holder.widget.setY(y + holder.getDy());
-                holder.widget.render(context, mouseX, mouseY, tickDelta);
+                holder.widget.setX(getX() + ClickableListWidget.this.rowWidth / 2 - 155 + holder.getDx());
+                holder.widget.setY(getY() + holder.getDy());
+                holder.widget.render(context, mouseX, mouseY, deltaTicks);
             }
         }
 

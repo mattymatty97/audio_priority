@@ -35,14 +35,14 @@ public class CategoryConfigScreen extends Screen {
 
         int count = soundCategories.size() + 1;
 
-        listWidget.addEntry(new ClickableListWidget.ListWidgetEntry(
+        listWidget.addEntry(
                 CyclingButtonWidget.builder(Text::literal)
                         .values(IntStream.range(0, count - 1).mapToObj(Integer::toString).toList())
                         .initially(Configs.getInstance().categoryClasses.getOrDefault(SoundCategory.MASTER.getName(),0).toString())
                         .build(0, 0, 310, 20,
                                 Text.translatable("soundCategory." + SoundCategory.MASTER.getName())
                                 , (button, value) -> Configs.getInstance().categoryClasses.put(SoundCategory.MASTER.getName(), Integer.parseInt(value)))
-        ));
+        );
 
         for (int i = 0; i < soundCategories.size(); i += 2) {
             SoundCategory category = soundCategories.get(i);
@@ -66,9 +66,9 @@ public class CategoryConfigScreen extends Screen {
                         .build(160, 0, 150, 20,
                                 Text.translatable("soundCategory." + category2.getName())
                                 , (button, value) -> Configs.getInstance().categoryClasses.put(category2.getName(), Integer.parseInt(value)));
-                listWidget.addEntry(new ClickableListWidget.ListWidgetEntry(widget1, widget2));
+                listWidget.addEntry(widget1, widget2);
             }else{
-                listWidget.addEntry(new ClickableListWidget.ListWidgetEntry(widget1));
+                listWidget.addEntry(widget1);
             }
         }
 

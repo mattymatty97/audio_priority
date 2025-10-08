@@ -23,7 +23,7 @@ public class ClickableListWidget extends ElementListWidget<ClickableListWidget.A
     }
 
     public int addEntry(ClickableWidget...widgets){
-        return super.addEntry(new ClickableListWidget.ListWidgetEntry(widgets));
+        return super.addEntry(new ListWidgetEntry(widgets));
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.mattymatty.audio_priority.screen;
 
 import com.google.common.collect.ImmutableList;
 import com.mattymatty.audio_priority.Configs;
+import com.mattymatty.audio_priority.client.AudioPriority;
 import joptsimple.internal.Strings;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -20,6 +21,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -33,35 +35,24 @@ public class SoundListConfigScreen extends Screen {
         super(Text.literal("Sound List"));
         this.parent = parent;
     }
-/*
-    @Override
-    public boolean charTyped(char chr, int modifiers) {
-        return this.searchBox.charTyped(chr, modifiers);
-    }
-*/
+
     @Override
     protected void init() {
         super.init();
         assert this.client != null;
-        this.searchBox = new TextFieldWidget(this.textRenderer, this.width / 2 - 100, 22, 200, 20, this.searchBox, Text.translatable("gui.recipebook.search_hint"));
+        this.searchBox = new TextFieldWidget(this.textRenderer, this.width / 2 - 100, 22, 200, 20, this.searchBox, Text.literal("Search Sound"));
         this.searchBox.setChangedListener(search -> this.soundList.showSearch(search));
-        this.soundList = new SoundListWidget(this.client, this.width, this.height - 32 - 48, 48, this.textRenderer.fontHeight * 2 + 8, 300);
+        this.soundList = new SoundListWidget(this.client, this.width, this.height - 32 - 48, 48, this.textRenderer.fontHeight * 2 + 8, 470);
         this.soundList.showSearch(this.searchBox.getText());
         this.addSelectableChild(this.searchBox);
         this.addDrawableChild(this.soundList);
         this.addDrawableChild(ButtonWidget.builder(ScreenTexts.DONE, button -> this.client.setScreen(this.parent)).dimensions(this.width / 2 - 100, (this.height) - 28, 200, 20).build());
         this.setInitialFocus(this.searchBox);
     }
-/*
-    @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        return super.keyPressed(keyCode, scanCode, modifiers) || this.searchBox.keyPressed(keyCode, scanCode, modifiers);
-    }
-*/
+
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
-        //this.renderBackground(context, mouseX, mouseY, delta);
 
         this.soundList.renderWidget(context, mouseX, mouseY, delta);
         this.searchBox.render(context, mouseX, mouseY, delta);
@@ -69,5 +60,13 @@ public class SoundListConfigScreen extends Screen {
 
     }
 
-
+    @Override
+    public void removed() {
+        try {
+            Configs.saveConfig();
+        } catch (IOException e) {
+            AudioPriority.LOGGER.error("Exception Saving Config file");
+            throw new RuntimeException(e);
+        }
+    }
 }

@@ -6,14 +6,13 @@ import com.mattymatty.audio_priority.mixins.accessors.SoundManagerAccessor;
 import joptsimple.internal.Strings;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.screen.narration.NarrationPart;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.gui.widget.ElementListWidget;
-import net.minecraft.client.gui.widget.SliderWidget;
+import net.minecraft.client.gui.widget.*;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
@@ -102,11 +101,12 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
         }
     }
 
-    public abstract static class AbstractSoundEntryWidget extends ElementListWidget.Entry<AbstractSoundEntryWidget> {
+    public abstract static class AbstractSoundEntryWidget extends Entry<AbstractSoundEntryWidget> {
         public abstract boolean shouldShow(String search);
     }
 
-    public class SoundWidgetEntry extends AbstractSoundEntryWidget implements Comparable<SoundWidgetEntry> {
+    public static class SoundWidgetEntry extends AbstractSoundEntryWidget implements Comparable<SoundWidgetEntry> {
+        final int spacing = 10;
 
         private final Identifier identifier;
 
@@ -115,8 +115,9 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
         private final Text name;
         private final Text subtitle;
         protected final List<ClickableWidget> children = new LinkedList<>();
-        private final VolumeSlider volumeSlider;
-        private final int sliderOffset;
+        private final VolumeSlider    volumeSlider;
+        private final ButtonWidget    resetButton;
+        private final int yOffset;
 
         public SoundWidgetEntry(Text name, Identifier identifier) {
             super();
@@ -130,28 +131,49 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
             }
             this.ruleName = text;
             this.ruleSubtitle = name;
-            assert SoundListWidget.this.client != null;
             this.name = this.ruleName;
             this.subtitle = text2;
 
-            int fontHeight = SoundListWidget.this.client.textRenderer.fontHeight;
+            TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
 
-            sliderOffset = Math.max(0, fontHeight + 2 - 10);
+            yOffset = Math.max(0, textRenderer.fontHeight + 2 - 10);
 
             float value = Configs.getInstance().soundVolumes.getOrDefault(identifier.toString(), 1f);
 
-            this.volumeSlider = new VolumeSlider( 0, 0, 100, 20, name, value, (newValue) -> {
-                if (newValue < 0d)
-                    newValue = 0d;
-                if (Math.abs(newValue - 1d) < 0.01d){
-                    Configs.getInstance().soundVolumes.remove(identifier.toString());
-                }else{
-                    Configs.getInstance().soundVolumes.put(identifier.toString(), (float)(double)newValue);
-                }
-            }
-            );
+            this.volumeSlider = new VolumeSlider(0, 0, 150, 20, name, value, this::OnValueChanged);
 
             this.children.add(this.volumeSlider);
+
+            this.resetButton = ButtonWidget
+                    .builder(Text.literal("Reset"), button -> OnResetValue())
+                    .dimensions(0, 0, 40, 20)
+                    .build();
+
+            if (Math.abs(value - 1f) < 0.01d)
+            {
+                this.resetButton.active = false;
+            }
+
+            this.children.add(this.resetButton);
+        }
+
+        private void OnValueChanged(double newValue) {
+            if (newValue < 0d)
+                newValue = 0d;
+            if (Math.abs(newValue - 1d) < 0.01d){
+                Configs.getInstance().soundVolumes.remove(identifier.toString());
+                this.resetButton.active = false;
+            }else{
+                Configs.getInstance().soundVolumes.put(identifier.toString(), (float)newValue);
+                this.resetButton.active = true;
+            }
+        }
+
+        private void OnResetValue()
+        {
+            this.volumeSlider.setValue(1d);
+            this.resetButton.active = false;
+            this.resetButton.setFocused(false);
         }
 
         @Override
@@ -164,8 +186,8 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
             return this.children;
         }
 
-        protected void drawName(DrawContext context, int textOffset, int x, int y) {
-            assert SoundListWidget.this.client != null;
+        protected void drawName(DrawContext context, int textEndX, int y) {
+            MinecraftClient mc = MinecraftClient.getInstance();
             List<Text> texts = new LinkedList<>();
             if (this.name != null) {
                 texts.add(this.name);
@@ -175,28 +197,30 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
             }
             int index = 0;
 
-            int textEnd = x + textOffset;
-
-            TextRenderer renderer = SoundListWidget.this.client.textRenderer;
+            TextRenderer renderer = mc.textRenderer;
 
             int offset = 2;
 
             if (texts.size() == 1){
                 offset = renderer.fontHeight / 2 + 3;
             }
-            TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+            TextRenderer textRenderer = mc.textRenderer;
             for (Text text : texts) {
                 int textWidth = renderer.getWidth(text);
-                context.drawTextWithShadow(textRenderer, text, textEnd - textWidth, y + offset + index * (textRenderer.fontHeight + 1),  Colors.WHITE);
+                context.drawTextWithShadow(textRenderer, text, textEndX - textWidth, y + offset + index * (textRenderer.fontHeight + 1),  Colors.WHITE);
                 index++;
             }
         }
+
         @Override
         public void render(DrawContext context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
-            this.drawName(context, SoundListWidget.this.rowWidth - this.volumeSlider.getWidth() - 10, getX(), getY());
-            this.volumeSlider.setX(getX() + SoundListWidget.this.rowWidth - this.volumeSlider.getWidth() + 1);
-            this.volumeSlider.setY(getY() + sliderOffset);
+            this.drawName(context,getX() + this.getWidth()/2 - spacing, getY());
+            this.volumeSlider.setX(getX() + this.getWidth()/2 + spacing);
+            this.volumeSlider.setY(getY() + yOffset);
             this.volumeSlider.render(context, mouseX, mouseY, deltaTicks);
+            this.resetButton.setX(getX() + this.getWidth()/2 + spacing + this.volumeSlider.getWidth() + spacing);
+            this.resetButton.setY(getY() + yOffset);
+            this.resetButton.render(context, mouseX, mouseY, deltaTicks);
         }
 
         public boolean shouldShow(String search) {
@@ -220,11 +244,9 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
                 return this.getRuleName().getString().compareTo(o.getRuleName().getString());
             return ret;
         }
-
-
     }
 
-    public class SoundNamespaceWidget extends AbstractSoundEntryWidget {
+    public static class SoundNamespaceWidget extends AbstractSoundEntryWidget {
         private final List<AbstractSoundEntryWidget> sub_entries = new LinkedList<>();
         final Text name;
 
@@ -243,7 +265,8 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
 
         @Override
         public void render(DrawContext context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
-            context.drawCenteredTextWithShadow(SoundListWidget.this.client.textRenderer, this.name, getX() + SoundListWidget.this.rowWidth / 2, getY() + 5,  Colors.WHITE);
+            MinecraftClient mc = MinecraftClient.getInstance();
+            context.drawCenteredTextWithShadow(mc.textRenderer, this.name, getX() + this.getWidth()/ 2, getY() + 5,  Colors.WHITE);
         }
 
         @Override
@@ -255,8 +278,8 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
         public List<? extends Selectable> selectableChildren() {
             return ImmutableList.of(new Selectable() {
                 @Override
-                public Selectable.SelectionType getType() {
-                    return Selectable.SelectionType.HOVERED;
+                public SelectionType getType() {
+                    return SelectionType.HOVERED;
                 }
 
                 @Override
@@ -267,30 +290,80 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
         }
     }
 
-    private class VolumeSlider extends SliderWidget {
+    private static class VolumeSlider extends SliderWidget {
+
+        private static final double EXPONENT = 2.0;
 
         private final Consumer<Double> callback;
 
         public VolumeSlider(int x, int y, int width, int height, Text label, double value, Consumer<Double> callback) {
-            super(x, y, width, height, label, value);
+            super(x, y, width, height, label, volumeToSlider(value));
             this.callback = callback;
+            this.updateMessage();
+        }
+
+        public void setValue(double value)
+        {
+            this.value = volumeToSlider(value);
             this.updateMessage();
         }
 
         @Override
         protected void updateMessage() {
+            double multiplier = sliderToVolume(this.value);
+            double decibel = volumeToDb(multiplier);
             if (this.value <= 0)
                 this.setMessage(ScreenTexts.OFF);
-            else if (Math.abs(this.value - 1d) < 0.01d)
+            else if (Math.abs(decibel) < 0.1d)
                 this.setMessage(DEFAULT);
             else
-                this.setMessage(Text.literal((int) (this.value * 100.0) + "%"));
+                this.setMessage(Text.literal(String.format("%+.1fDb", decibel)));
         }
 
         @Override
         protected void applyValue() {
-            callback.accept(Math.max(0d, this.value));
+            double multiplier = sliderToVolume(this.value);
+            double decibel = volumeToDb(multiplier);
+            //round to 1 decimal place
+            double rounded = Math.round(decibel * 10.0) / 10.0;
+            double limited = Math.max(0d, dbToVolume(rounded));
+
+            this.value = volumeToSlider(limited);
+            callback.accept(limited);
         }
 
+        // Forward mapping
+        public static double sliderToVolume(double slider) {
+            if (slider <= 0.0) return 0.0;
+            if (slider >= 1.0) return 2.0;
+
+            if (slider <= 0.7) {
+                double normalized = slider / 0.7;
+                return Math.pow(normalized, EXPONENT);
+            } else {
+                double t = (slider - 0.7) / 0.3;
+                return 1.0 + t; // 1 → 2
+            }
+        }
+
+        // Inverse mapping: multiplier → slider
+        public static double volumeToSlider(double multiplier) {
+            if (multiplier <= 0.0) return 0.0;
+            if (multiplier >= 2.0) return 1.0;
+
+            if (multiplier <= 1.0) {
+                return 0.7 * Math.pow(multiplier, 1.0 / EXPONENT);
+            } else {
+                return 0.7 + (multiplier - 1.0) * 0.3;
+            }
+        }
+
+        public static double dbToVolume(double dB) {
+            return Math.pow(10, dB / 20.0);
+        }
+
+        public static double volumeToDb(double multiplier) {
+            return 20.0 * Math.log10(multiplier);
+        }
     }
 }

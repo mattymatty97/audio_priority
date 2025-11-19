@@ -1,55 +1,59 @@
-Audio Engine Tweaks
+# Audio Engine Tweaks
 
-this mod changes how Minecraft schedules sounds in order to prevent the sound pool to fill up
-or at least mitigate the effects of a full sound pool
+---
 
-TLDR:
-this mod fixes these errors ( log spam too ):
-    [Render thread/WARN]: Failed to create new sound handle
-    [Sound engine/WARN]: Maximum sound pool size 247 reached
-and prevents the sound pool from overloading ( loss of all sounds in game until the pool frees up )
+## News
+Since **v1.2.7**, you can now adjust the volume of each sound **independently** of the vanilla sliders.
 
-Details:
-every tick sound are collected and categorized by sound type.
-then the sounds are sorted by category ( lower number means higher priority ).
-each category is also ordered by distance from the player.
+![Sound List Menu](https://cdn.modrinth.com/data/cached_images/2040acf776a796a14fa8ff2eb3ed7d7136946f81_0.webp)
+---
 
-depending on the fill level of the sound pool certain sound types are allowed to be player otherwise they are skipped.
+## Overview
+This mod changes how Minecraft schedules sounds to prevent the sound pool from filling up, or at least reduce the effects of a full sound pool.
 
-if the sound pool gets full all successive sounds are skipped ( should never happen with the threshold rules ).
+### TL;DR
+It fixes these common errors (and the related log spam):
+```
+[Render thread/WARN]: Failed to create new sound handle
+[Sound engine/WARN]: Maximum sound pool size 247 reached
+```
 
-each tick there is a duplication check that will allow only a set number instances of the same sound to be played in the same coordinate ( 1 square block ),
-excess are skipped.
+Without this mod, a full sound pool causes all in-game audio to stop until slots free up.
 
-sounds of MASTER and MUSIC Type are allowed to be played instantly ( if requested ) bypassing the priority queue and the duplication check
-( this is because they can be requested by the Main Menu or the GUI while the internal server is frozen )
-they will still follow the fill level threshold rules.
-other Categories if requested to be played instantly, will instead be scheduled to the current tick
+---
 
-all the values are editable trough ModMenu config page or by manually editing the config file
+## How It Works
 
-Defaults:
-MASTER	cat 0 and always allowed
-VOICE	cat 0 and always allowed
-PLAYERS	cat 6 and up to 95%
-HOSTILE	cat 5 and up to 90%
-BLOCKS	cat 4 and up to 80%
-MUSIC	cat 3 and up to 70%
-RECORDS	cat 3 and up to 70%
-NEUTRAL	cat 2 and up to 60%
-WEATHER	cat 1 and up to 50%
-AMBIENT	cat 1 and up to 50%
+- Each tick, sounds are **collected and categorized** by type.  
+  - **Lower category = higher priority**.  
+  - Within categories, sounds are sorted by **distance from the player**.
 
-maxDuplicatedSoundsByPos : 5
-maxDuplicatedSoundByID   : 50
+- Depending on the **sound pool fill level**, only certain sound types are allowed to play. Others are skipped.  
+  - If the pool somehow fills completely (shouldn’t happen with thresholds), new sounds are skipped entirely.
 
-EDIT v1.2.4:
-    since this version a new menu is available to directly mute any sound. ( or the relative config line that lists the muted sound by their ID )
+- **Duplication check**:  
+  - Only a limited number of identical sounds can play from the same coordinate (1 block).  
+  - Extra duplicates are skipped.
 
-    PLEASE if anybody good with UI sees this contact me, 
-    having to scroll though the entire list of sounds is quite a pain to do, but I do not know how to make a proper UI.
+- **MASTER** and **MUSIC** sounds bypass the queue and duplication check (important for main menu or GUI events when the server is frozen).  
+  - They still follow fill-level thresholds.  
+  - Other categories, if requested to play instantly, are instead deferred to the next tick.
 
-EDIT v1.2.5:
-    Added a search bar in the mute menu
+- All values are configurable through **ModMenu** or by editing the config file directly.
 
-    Inverted the default priorities so now you'll be able to hear sounds from all categories
+---
+
+## Default Settings
+```yaml
+MASTER    : cat 0, always allowed
+VOICE     : cat 0, always allowed
+PLAYERS   : cat 1, up to 95%
+HOSTILE   : cat 2, up to 90%
+BLOCKS    : cat 3, up to 80%
+MUSIC     : cat 4, up to 70%
+RECORDS   : cat 4, up to 70%
+NEUTRAL   : cat 5, up to 60%
+WEATHER   : cat 6, up to 50%
+AMBIENT   : cat 6, up to 50%
+
+maxDuplicatedSounds: 5

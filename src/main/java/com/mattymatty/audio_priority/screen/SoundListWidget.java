@@ -306,6 +306,7 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
         {
             this.value = volumeToSlider(value);
             this.updateMessage();
+            applyValue();
         }
 
         @Override
@@ -317,7 +318,7 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
             else if (Math.abs(decibel) < 0.1d)
                 this.setMessage(DEFAULT);
             else
-                this.setMessage(Text.literal(String.format("%+.1fDb", decibel)));
+                this.setMessage(Text.literal(String.format("%+.1f dB", decibel)));
         }
 
         @Override

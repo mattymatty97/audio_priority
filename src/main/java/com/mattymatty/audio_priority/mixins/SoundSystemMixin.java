@@ -14,7 +14,9 @@ import net.minecraft.client.sound.*;
 import net.minecraft.entity.Entity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Pair;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -26,9 +28,9 @@ import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.lang.ref.WeakReference;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -36,9 +38,11 @@ import java.util.stream.Collectors;
 @Mixin(SoundSystem.class)
 public abstract class SoundSystemMixin {
     @Unique
-    private final Map<Vec3d, Map<Identifier, AtomicInteger>> playedByPos = new HashMap<>();
+    private final Object memoryLock = new Object();
     @Unique
-    private final Map<Identifier, AtomicInteger> playedByIdentifier = new HashMap<>();
+    private final Map<Vec3d, List<Pair<WeakReference<SoundInstance>,WeakReference<Channel.SourceManager>>>> playedByPos = new HashMap<>();
+    @Unique
+    private final Map<Identifier, List<Pair<WeakReference<SoundInstance>,WeakReference<Channel.SourceManager>>>> playedByIdentifier = new HashMap<>();
     @Unique
     Map<Integer, Set<SoundInstance>> soundsPerTick = new TreeMap<>();
     @Shadow
@@ -70,6 +74,16 @@ public abstract class SoundSystemMixin {
         return category * 10000 + Math.min(tie_break, 9999);
     }
 
+    @Unique
+    private @NotNull List<Pair<WeakReference<SoundInstance>, WeakReference<Channel.SourceManager>>> getSoundsAtPosition(Vec3d pos) {
+        return this.playedByPos.computeIfAbsent(pos,(i) -> new LinkedList<>());
+    }
+
+    @Unique
+    private @NotNull List<Pair<WeakReference<SoundInstance>, WeakReference<Channel.SourceManager>>> getSoundsByID(Identifier id) {
+        return this.playedByIdentifier.computeIfAbsent(id,(i) -> new LinkedList<>());
+    }
+
     @Shadow
     public abstract SoundSystem.PlayResult play(SoundInstance sound);
 
@@ -85,12 +99,22 @@ public abstract class SoundSystemMixin {
         return soundsPerTick.computeIfAbsent(tick, k -> new LinkedHashSet<>());
     }
 
-    //thorw an exception instead of just a log message ( allows me to skip successive play calls instead of spamming the logs )
     @WrapOperation(method = "play(Lnet/minecraft/client/sound/SoundInstance;)Lnet/minecraft/client/sound/SoundSystem$PlayResult;", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/CompletableFuture;join()Ljava/lang/Object;"))
-    Object except_on_full_sound_pool(CompletableFuture<Object> instance, Operation<Object> original) {
+    Object onAcquireSourceManager(CompletableFuture<Object> instance, Operation<Object> original, SoundInstance sound) {
         Object ret = original.call(instance);
+        //thorw an exception instead of just a log message ( allows me to skip successive play calls instead of spamming the logs )
         if (ret == null)
             throw new SoundPoolException();
+        
+        //append sound to lists instead
+        var soundsHere = getSoundsAtPosition(new Vec3d(Math.floor(sound.getX()), Math.floor(sound.getY()), Math.floor(sound.getZ())));
+
+        var similarSounds = this.getSoundsByID(sound.getId());
+        
+        var entry = new Pair<>(new WeakReference<>(sound), new WeakReference<>((Channel.SourceManager)ret));
+        
+        soundsHere.add(entry);
+        similarSounds.add(entry);
         return ret;
     }
 
@@ -181,6 +205,9 @@ public abstract class SoundSystemMixin {
     void should_play_sound(SoundInstance sound, CallbackInfoReturnable<SoundSystem.PlayResult> cir, @Local(ordinal = 2) LocalFloatRef volume) {
         if (sound == null)
             return;
+        if (sound.getSound() == null)
+            return;
+
         SoundEngine.SourceSet streamingSources = ((SoundEngineAccessor) this.soundEngine).getStreamingSources();
         SoundEngine.SourceSet staticSources = ((SoundEngineAccessor) this.soundEngine).getStaticSources();
 
@@ -203,30 +230,56 @@ public abstract class SoundSystemMixin {
 
         //sounds that can be played outside the tick need to skip the duplication check
         if (!Configs.getInstance().instantCategories.contains(sound.getCategory().getName())) {
-            //get duplicate map for this sound location ( Block Position )
-            Map<Identifier, AtomicInteger> played_sounds = this.playedByPos.computeIfAbsent(
-                    new Vec3d(Math.floor(sound.getX()), Math.floor(sound.getY()), Math.floor(sound.getZ())),
-                    (i) -> new HashMap<>());
 
-            AtomicInteger posCount = played_sounds.computeIfAbsent(sound.getId(), (i) -> new AtomicInteger());
+            synchronized (memoryLock)
+            {
+                //get duplicate map for this sound location ( Block Position )
+                var soundsHere = getSoundsAtPosition(new Vec3d(Math.floor(sound.getX()), Math.floor(sound.getY()), Math.floor(sound.getZ())));
 
-            AtomicInteger idCount = this.playedByIdentifier.computeIfAbsent(sound.getId(), (i) -> new AtomicInteger());
+                var similarSounds = this.getSoundsByID(sound.getId());
 
-            //if there are too many duplicated sounds skip playing them
-            if (posCount.getAndIncrement() > Configs.getInstance().maxDuplicatedSoundsByPos) {
-                AudioPriority.LOGGER.debug("Duplicated Sound {} at {} {} {}, Skipped",
-                        sound.getSound().getIdentifier(),
-                        sound.getX(),
-                        sound.getY(),
-                        sound.getZ());
-                return false;
+                var iterator = soundsHere.iterator();
+                var positionCount = 0;
+                while (iterator.hasNext()) {
+                    var reference = iterator.next();
+                    var instance = reference.getLeft().get();
+                    var manager = reference.getRight().get();
+                    if (instance == null || manager == null || manager.isStopped())
+                        iterator.remove();
+                    else if (instance.getId().equals(sound.getId()))
+                        positionCount++;
+                }
+
+                iterator = similarSounds.iterator();
+                var identifierCount = 0;
+                while (iterator.hasNext()) {
+                    var reference = iterator.next();
+                    var instance = reference.getLeft().get();
+                    var manager = reference.getRight().get();
+                    if (instance == null || manager == null || manager.isStopped())
+                        iterator.remove();
+                    else
+                        identifierCount++;
+                }
+
+                //if there are too many duplicated sounds skip playing them
+                if (positionCount > Configs.getInstance().maxDuplicatedSoundsByPos) {
+                    AudioPriority.LOGGER.debug("Duplicated Sound {} at {} {} {}, Skipped",
+                            sound.getId(),
+                            sound.getX(),
+                            sound.getY(),
+                            sound.getZ());
+                    return false;
+                }
+
+                if (identifierCount > Configs.getInstance().maxDuplicatedSoundsById) {
+                    AudioPriority.LOGGER.debug("Duplicated Sound Id {}, Skipped",
+                            sound.getId());
+                    return false;
+                }
+
             }
 
-            if (idCount.getAndIncrement() > Configs.getInstance().maxDuplicatedSoundsById) {
-                AudioPriority.LOGGER.debug("Duplicated Sound Id {}, Skipped",
-                        sound.getId());
-                return false;
-            }
         }
 
         int sound_count = dest.getSourceCount();
@@ -245,20 +298,40 @@ public abstract class SoundSystemMixin {
     @Unique
     private void stopped_playing(SoundInstance sound){
         if (sound != null) {
-            Vec3d pos = new Vec3d(Math.floor(sound.getX()), Math.floor(sound.getY()), Math.floor(sound.getZ()));
-            Map<Identifier, AtomicInteger> played_sounds = this.playedByPos.get(pos);
-            if (played_sounds != null) {
-                AtomicInteger posCount = played_sounds.get(sound.getId());
-                if (posCount != null && posCount.decrementAndGet() <= 0) {
-                    played_sounds.remove(sound.getId());
-                }
-                if (played_sounds.isEmpty())
-                    this.playedByPos.remove(pos);
-            }
+            var pos = new Vec3d(Math.floor(sound.getX()), Math.floor(sound.getY()), Math.floor(sound.getZ()));
+            var identifier = sound.getId();
 
-            AtomicInteger idCount = this.playedByIdentifier.get(sound.getId());
-            if (idCount != null && idCount.decrementAndGet() <= 0)
-                this.playedByIdentifier.remove(sound.getId());
+            synchronized (memoryLock)
+            {
+                var soundsHere = getSoundsAtPosition(pos);
+
+                var similarSounds = this.getSoundsByID(sound.getId());
+
+                var iterator = soundsHere.iterator();
+                while (iterator.hasNext()) {
+                    var entry = iterator.next();
+                    var instance = entry.getLeft();
+                    var manager = entry.getRight();
+                    if (instance.refersTo(null) || manager.refersTo(null) || manager.get().isStopped())
+                        iterator.remove();
+                }
+
+                iterator = similarSounds.iterator();
+                while (iterator.hasNext()) {
+                    var entry = iterator.next();
+                    var instance = entry.getLeft();
+                    var manager = entry.getRight();
+                    if (instance.refersTo(null) || manager.refersTo(null) || manager.get().isStopped())
+                        iterator.remove();
+                }
+
+                //cleanup code
+                if (soundsHere.isEmpty())
+                    this.playedByPos.remove(pos);
+
+                if (similarSounds.isEmpty())
+                    this.playedByIdentifier.remove(identifier);
+            }
         }
     }
 

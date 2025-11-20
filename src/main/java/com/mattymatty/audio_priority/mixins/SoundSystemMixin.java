@@ -1,6 +1,5 @@
 package com.mattymatty.audio_priority.mixins;
 
-import com.google.common.collect.Multimap;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -13,10 +12,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.sound.*;
 import net.minecraft.entity.Entity;
 import net.minecraft.sound.SoundCategory;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Pair;
 import net.minecraft.util.math.Vec3d;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.util.math.Vec3i;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -24,11 +21,9 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
-import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.lang.ref.WeakReference;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -37,22 +32,27 @@ import java.util.stream.Collectors;
 
 @Mixin(SoundSystem.class)
 public abstract class SoundSystemMixin {
+
     @Unique
     private final Object memoryLock = new Object();
-    @Unique
-    private final Map<Vec3d, List<Pair<WeakReference<SoundInstance>,WeakReference<Channel.SourceManager>>>> playedByPos = new HashMap<>();
-    @Unique
-    private final Map<Identifier, List<Pair<WeakReference<SoundInstance>,WeakReference<Channel.SourceManager>>>> playedByIdentifier = new HashMap<>();
+
     @Unique
     Map<Integer, Set<SoundInstance>> soundsPerTick = new TreeMap<>();
+
     @Shadow
     private int ticks;
+
     @Shadow
     @Final
     private Map<SoundInstance, Integer> soundStartTicks;
+
     @Shadow
     @Final
     private SoundEngine soundEngine;
+
+    @Shadow
+    @Final
+    private Map<SoundInstance, Channel.SourceManager> sources;
 
     @Unique
     private static int sound_comparator(SoundInstance sound) {
@@ -74,25 +74,11 @@ public abstract class SoundSystemMixin {
         return category * 10000 + Math.min(tie_break, 9999);
     }
 
-    @Unique
-    private @NotNull List<Pair<WeakReference<SoundInstance>, WeakReference<Channel.SourceManager>>> getSoundsAtPosition(Vec3d pos) {
-        return this.playedByPos.computeIfAbsent(pos,(i) -> new LinkedList<>());
-    }
-
-    @Unique
-    private @NotNull List<Pair<WeakReference<SoundInstance>, WeakReference<Channel.SourceManager>>> getSoundsByID(Identifier id) {
-        return this.playedByIdentifier.computeIfAbsent(id,(i) -> new LinkedList<>());
-    }
-
     @Shadow
     public abstract SoundSystem.PlayResult play(SoundInstance sound);
 
     @Shadow
     public abstract void play(SoundInstance sound, int delay);
-
-    @Shadow @Final private Multimap<SoundCategory, SoundInstance> sounds;
-
-    @Shadow @Final private Map<SoundInstance, Integer> soundEndTicks;
 
     @Unique
     private Set<SoundInstance> getSoundList(int tick) {
@@ -105,16 +91,7 @@ public abstract class SoundSystemMixin {
         //thorw an exception instead of just a log message ( allows me to skip successive play calls instead of spamming the logs )
         if (ret == null)
             throw new SoundPoolException();
-        
-        //append sound to lists instead
-        var soundsHere = getSoundsAtPosition(new Vec3d(Math.floor(sound.getX()), Math.floor(sound.getY()), Math.floor(sound.getZ())));
 
-        var similarSounds = this.getSoundsByID(sound.getId());
-        
-        var entry = new Pair<>(new WeakReference<>(sound), new WeakReference<>((Channel.SourceManager)ret));
-        
-        soundsHere.add(entry);
-        similarSounds.add(entry);
         return ret;
     }
 
@@ -180,26 +157,6 @@ public abstract class SoundSystemMixin {
         ci.cancel();
     }
 
-    @Inject(method = "stopAll", at = @At("HEAD"))
-    void stopAll(CallbackInfo ci){
-        //clear the duplication list
-        playedByPos.forEach((k, m) -> m.clear()); //try and clear also potential memory leaks
-        playedByPos.clear();
-
-        playedByIdentifier.clear();
-    }
-
-    @Inject(method = "tick()V", at = @At(value = "INVOKE", target = "Ljava/util/Iterator;remove()V", shift = At.Shift.AFTER)
-            , slice = @Slice(from = @At(value = "INVOKE", target = "Ljava/util/Map;entrySet()Ljava/util/Set;", ordinal = 0), to  = @At(value = "INVOKE", target = "Ljava/util/Map;entrySet()Ljava/util/Set;", ordinal = 1)))
-    void tickStoppedPlaying(CallbackInfo ci, @Local SoundInstance sound){
-        this.stopped_playing(sound);
-    }
-
-    @Inject(method = "stop(Lnet/minecraft/client/sound/SoundInstance;)V", at = @At(value = "HEAD"))
-    void stop_sound(SoundInstance sound, CallbackInfo ci){
-        this.stopped_playing(sound);
-    }
-
     //decide if to actually play or not a sound
     @Inject(cancellable = true, method = "play(Lnet/minecraft/client/sound/SoundInstance;)Lnet/minecraft/client/sound/SoundSystem$PlayResult;", at = @At(value = "INVOKE_ASSIGN", ordinal = 0, target = "Lnet/minecraft/client/sound/Sound;isStreamed()Z"))
     void should_play_sound(SoundInstance sound, CallbackInfoReturnable<SoundSystem.PlayResult> cir, @Local(ordinal = 2) LocalFloatRef volume) {
@@ -230,54 +187,47 @@ public abstract class SoundSystemMixin {
 
         //sounds that can be played outside the tick need to skip the duplication check
         if (!Configs.getInstance().instantCategories.contains(sound.getCategory().getName())) {
+            var id = sound.getId();
+            var here = new Vec3i((int) sound.getX(), (int) sound.getY(), (int) sound.getZ());
+            var positionCount = 0;
+            var identifierCount = 0;
 
-            synchronized (memoryLock)
-            {
+            synchronized (memoryLock) {
                 //get duplicate map for this sound location ( Block Position )
-                var soundsHere = getSoundsAtPosition(new Vec3d(Math.floor(sound.getX()), Math.floor(sound.getY()), Math.floor(sound.getZ())));
+                for (var pair : this.sources.entrySet()) {
+                    var soundInstance = pair.getKey();
+                    var manager = pair.getValue();
 
-                var similarSounds = this.getSoundsByID(sound.getId());
+                    if (manager.isStopped())
+                        continue;
 
-                var iterator = soundsHere.iterator();
-                var positionCount = 0;
-                while (iterator.hasNext()) {
-                    var reference = iterator.next();
-                    var instance = reference.getLeft().get();
-                    var manager = reference.getRight().get();
-                    if (instance == null || manager == null || manager.isStopped())
-                        iterator.remove();
-                    else if (instance.getId().equals(sound.getId()))
+                    if (soundInstance.getId() != id)
+                        continue;
+
+                    identifierCount++;
+
+                    if (here.equals(new Vec3i((int)soundInstance.getX(), (int)soundInstance.getY(), (int)soundInstance.getZ())))
                         positionCount++;
                 }
+            }
 
-                iterator = similarSounds.iterator();
-                var identifierCount = 0;
-                while (iterator.hasNext()) {
-                    var reference = iterator.next();
-                    var instance = reference.getLeft().get();
-                    var manager = reference.getRight().get();
-                    if (instance == null || manager == null || manager.isStopped())
-                        iterator.remove();
-                    else
-                        identifierCount++;
-                }
+            AudioPriority.LOGGER.warn("Sound {} at Pos {}\nlocation: {}\ncount: {}",
+                    id, here, positionCount, identifierCount);
 
-                //if there are too many duplicated sounds skip playing them
-                if (positionCount > Configs.getInstance().maxDuplicatedSoundsByPos) {
-                    AudioPriority.LOGGER.debug("Duplicated Sound {} at {} {} {}, Skipped",
-                            sound.getId(),
-                            sound.getX(),
-                            sound.getY(),
-                            sound.getZ());
-                    return false;
-                }
+            //if there are too many duplicated sounds skip playing them
+            if (positionCount >= Configs.getInstance().maxDuplicatedSoundsByPos) {
+                AudioPriority.LOGGER.debug("Duplicated Sound {} at {} {} {}, Skipped",
+                        sound.getId(),
+                        sound.getX(),
+                        sound.getY(),
+                        sound.getZ());
+                return false;
+            }
 
-                if (identifierCount > Configs.getInstance().maxDuplicatedSoundsById) {
-                    AudioPriority.LOGGER.debug("Duplicated Sound Id {}, Skipped",
-                            sound.getId());
-                    return false;
-                }
-
+            if (identifierCount >= Configs.getInstance().maxDuplicatedSoundsById) {
+                AudioPriority.LOGGER.debug("Duplicated Sound Id {}, Skipped",
+                        sound.getId());
+                return false;
             }
 
         }
@@ -293,46 +243,6 @@ public abstract class SoundSystemMixin {
                     sound.getCategory().getName());
         }
         return ret;
-    }
-
-    @Unique
-    private void stopped_playing(SoundInstance sound){
-        if (sound != null) {
-            var pos = new Vec3d(Math.floor(sound.getX()), Math.floor(sound.getY()), Math.floor(sound.getZ()));
-            var identifier = sound.getId();
-
-            synchronized (memoryLock)
-            {
-                var soundsHere = getSoundsAtPosition(pos);
-
-                var similarSounds = this.getSoundsByID(sound.getId());
-
-                var iterator = soundsHere.iterator();
-                while (iterator.hasNext()) {
-                    var entry = iterator.next();
-                    var instance = entry.getLeft();
-                    var manager = entry.getRight();
-                    if (instance.refersTo(null) || manager.refersTo(null) || manager.get().isStopped())
-                        iterator.remove();
-                }
-
-                iterator = similarSounds.iterator();
-                while (iterator.hasNext()) {
-                    var entry = iterator.next();
-                    var instance = entry.getLeft();
-                    var manager = entry.getRight();
-                    if (instance.refersTo(null) || manager.refersTo(null) || manager.get().isStopped())
-                        iterator.remove();
-                }
-
-                //cleanup code
-                if (soundsHere.isEmpty())
-                    this.playedByPos.remove(pos);
-
-                if (similarSounds.isEmpty())
-                    this.playedByIdentifier.remove(identifier);
-            }
-        }
     }
 
 }

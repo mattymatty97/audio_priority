@@ -32,7 +32,7 @@ public class ThresholdConfigScreen extends Screen {
         ClickableListWidget listWidget = new ClickableListWidget(this.client, this.width, this.height - 64, 32, 25, 310);
 
         ThresholdSlider slider = new ThresholdSlider(0, 0, 310, 20, Text.translatable("soundCategory." + SoundCategory.MASTER.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(SoundCategory.MASTER.getName(), 0f), (d) ->
-                Configs.getInstance().maxPercentPerCategory.put(SoundCategory.MASTER.getName(), (float)(double)d)
+                Configs.getInstance().maxPercentPerCategory.put(SoundCategory.MASTER.getName(), (float)Math.clamp(d, 0, 1))
         );
         slider.active = false;
 
@@ -47,12 +47,12 @@ public class ThresholdConfigScreen extends Screen {
             ThresholdSlider slider2;
 
             slider1 = new ThresholdSlider(0, 0, 150, 20, Text.translatable("soundCategory." + category.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(category.getName(), 0.1f), (d) ->
-                    Configs.getInstance().maxPercentPerCategory.put(category.getName(), (float)(double)d)
+                    Configs.getInstance().maxPercentPerCategory.put(category.getName(), (float)Math.clamp(d, 0, 1))
             );
 
             if (category2 != null){
                 slider2 = new ThresholdSlider(160, 0, 150, 20, Text.translatable("soundCategory." + category2.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(category2.getName(), 0.1f), (d) ->
-                        Configs.getInstance().maxPercentPerCategory.put(category2.getName(), (float)(double)d)
+                        Configs.getInstance().maxPercentPerCategory.put(category2.getName(), (float)Math.clamp(d, 0, 1))
                 );
                 listWidget.addEntry(slider1, slider2);
             }else{

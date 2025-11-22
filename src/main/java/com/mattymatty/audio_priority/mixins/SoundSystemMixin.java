@@ -211,9 +211,6 @@ public abstract class SoundSystemMixin {
                 }
             }
 
-            AudioPriority.LOGGER.warn("Sound {} at Pos {}\nlocation: {}\ncount: {}",
-                    id, here, positionCount, identifierCount);
-
             //if there are too many duplicated sounds skip playing them
             if (positionCount >= Configs.getInstance().maxDuplicatedSoundsByPos) {
                 AudioPriority.LOGGER.debug("Duplicated Sound {} at {} {} {}, Skipped",

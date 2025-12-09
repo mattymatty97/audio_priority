@@ -34,12 +34,10 @@ public class InstantConfigScreen extends Screen {
         List<SoundCategory> soundCategories = Arrays.stream(SoundCategory.values()).filter(soundCategory -> soundCategory != SoundCategory.MASTER).toList();
 
 
-        CyclingButtonWidget<String> btn = CyclingButtonWidget.builder(Text::literal)
-                .values(List.of(Boolean.FALSE.toString(), Boolean.TRUE.toString()))
-                .initially(Boolean.toString(Configs.getInstance().instantCategories.contains(SoundCategory.MASTER.getName())))
+        ClickableWidget btn = CyclingButtonWidget.onOffBuilder(Configs.getInstance().instantCategories.contains(SoundCategory.MASTER.getName()))
                 .build(0, 0, 310, 20, Text.translatable("soundCategory." + SoundCategory.MASTER.getName())
                         , (button, value) -> {
-                            if (Boolean.parseBoolean(value))
+                            if (value)
                                 Configs.getInstance().instantCategories.add(SoundCategory.MASTER.getName());
                             else
                                 Configs.getInstance().instantCategories.remove(SoundCategory.MASTER.getName());
@@ -55,24 +53,20 @@ public class InstantConfigScreen extends Screen {
             ClickableWidget widget1;
             ClickableWidget widget2;
 
-            widget1 = CyclingButtonWidget.builder(Text::literal)
-                    .values(List.of(Boolean.FALSE.toString(), Boolean.TRUE.toString()))
-                    .initially(Boolean.toString(Configs.getInstance().instantCategories.contains(category.getName())))
+            widget1 = CyclingButtonWidget.onOffBuilder(Configs.getInstance().instantCategories.contains(category.getName()))
                     .build(0, 0, 150, 20, Text.translatable("soundCategory." + category.getName())
                             , (button, value) -> {
-                                if (Boolean.parseBoolean(value))
+                                if (value)
                                     Configs.getInstance().instantCategories.add(category.getName());
                                 else
                                     Configs.getInstance().instantCategories.remove(category.getName());
                             });
 
             if (category2 != null){
-                widget2 = CyclingButtonWidget.builder(Text::literal)
-                        .values(List.of(Boolean.FALSE.toString(), Boolean.TRUE.toString()))
-                        .initially(Boolean.toString(Configs.getInstance().instantCategories.contains(category2.getName())))
+                widget2 = CyclingButtonWidget.onOffBuilder(Configs.getInstance().instantCategories.contains(category2.getName()))
                         .build(160, 0, 150, 20, Text.translatable("soundCategory." + category2.getName())
                                 , (button, value) -> {
-                                    if (Boolean.parseBoolean(value))
+                                    if (value)
                                         Configs.getInstance().instantCategories.add(category2.getName());
                                     else
                                         Configs.getInstance().instantCategories.remove(category2.getName());

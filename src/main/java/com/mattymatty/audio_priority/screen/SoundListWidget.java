@@ -119,18 +119,18 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
         private final ButtonWidget    resetButton;
         private final int yOffset;
 
-        public SoundWidgetEntry(Text name, Identifier identifier) {
+        public SoundWidgetEntry(Text subtitle, Identifier identifier) {
             super();
             this.identifier = identifier;
             MutableText text = Text.literal(identifier.getPath());
             MutableText text2 = null;
-            if (name != null) {
+            if (subtitle != null) {
                 text2 = Text.literal("( ");
-                text2.append(name);
+                text2.append(subtitle);
                 text2.append(Text.literal(" )"));
             }
             this.ruleName = text;
-            this.ruleSubtitle = name;
+            this.ruleSubtitle = subtitle;
             this.name = this.ruleName;
             this.subtitle = text2;
 
@@ -140,7 +140,7 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
 
             float value = Configs.getInstance().soundVolumes.getOrDefault(identifier.toString(), 1f);
 
-            this.volumeSlider = new VolumeSlider(0, 0, 150, 20, name, value, this::OnValueChanged);
+            this.volumeSlider = new VolumeSlider(0, 0, 150, 20, value, this::OnValueChanged);
 
             this.children.add(this.volumeSlider);
 
@@ -296,8 +296,8 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
 
         private final Consumer<Double> callback;
 
-        public VolumeSlider(int x, int y, int width, int height, Text label, double value, Consumer<Double> callback) {
-            super(x, y, width, height, label, volumeToSlider(value));
+        public VolumeSlider(int x, int y, int width, int height, double value, Consumer<Double> callback) {
+            super(x, y, width, height, ScreenTexts.EMPTY, volumeToSlider(value));
             this.callback = callback;
             this.updateMessage();
         }

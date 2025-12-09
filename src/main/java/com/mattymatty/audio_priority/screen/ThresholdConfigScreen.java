@@ -103,7 +103,7 @@ public class ThresholdConfigScreen extends Screen {
         protected final Text label;
 
         public ThresholdSlider(int x, int y, int width, int height, Text label, double value, Consumer<Double> callback) {
-            super(x, y, width, height, label, value);
+            super(x, y, width, height, ScreenTexts.EMPTY, value);
             this.callback = callback;
             this.label = label;
             this.updateMessage();

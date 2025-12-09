@@ -1,7 +1,10 @@
 package com.mattymatty.audio_priority;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.Strictness;
+import com.google.gson.stream.JsonWriter;
+import com.mojang.authlib.minecraft.client.ObjectMapper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.sound.SoundCategory;
 
@@ -13,12 +16,12 @@ import java.util.Set;
 
 public class Configs implements Serializable {
 
+    private static final Gson gson = new GsonBuilder().setStrictness(Strictness.LENIENT).setPrettyPrinting().create();
+
     private static Configs instance = new Configs();
     public final Map<String, Integer> categoryClasses = new HashMap<>();
     public final Map<String, Float> maxPercentPerCategory = new HashMap<>();
     public final Set<String> instantCategories = new HashSet<>();
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    public final Set<String> mutedSounds = new HashSet<>();
     public final Map<String, Float> soundVolumes = new HashMap<>();
     public Integer maxDuplicatedSoundsByPos;
     public Integer maxDuplicatedSoundsById;
@@ -59,18 +62,17 @@ public class Configs implements Serializable {
     }
 
     public static void saveConfig() throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.writerWithDefaultPrettyPrinter().writeValue(FabricLoader.getInstance().getConfigDir().resolve("audio_engine.json").toFile(), instance);
+        try (Writer writer = new FileWriter(FabricLoader.getInstance().getConfigDir().resolve("audio_engine.json").toFile()))
+        {
+            gson.toJson(instance, writer);
+        }
     }
 
     public static void loadConfig() throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        instance = mapper.readerFor(Configs.class).readValue(FabricLoader.getInstance().getConfigDir().resolve("audio_engine.json").toFile());
-
-        for (String id : instance.mutedSounds){
-            instance.soundVolumes.put(id, 0f);
+        try (Reader reader = new FileReader(FabricLoader.getInstance().getConfigDir().resolve("audio_engine.json").toFile()))
+        {
+            instance = gson.fromJson(reader, Configs.class);
         }
-
     }
 
 }

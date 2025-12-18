@@ -1,7 +1,7 @@
 package com.mattymatty.audio_priority.mixins;
 
-import com.mattymatty.audio_priority.mixins.accessors.ScreenAccessor;
 import com.mattymatty.audio_priority.screen.ConfigScreen;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.option.GameOptionsScreen;
 import net.minecraft.client.gui.screen.option.SoundOptionsScreen;
@@ -20,8 +20,9 @@ public abstract class SoundOptionsScreenMixin extends GameOptionsScreen {
 
     @Override
     protected void initFooter() {
+        MinecraftClient mc = MinecraftClient.getInstance();
         DirectionalLayoutWidget directionalLayoutWidget = this.layout.addFooter(DirectionalLayoutWidget.horizontal().spacing(8));
-        directionalLayoutWidget.add(ButtonWidget.builder(Text.literal("Audio Priorities"), button -> ((ScreenAccessor)this).getClient().setScreen(new ConfigScreen((SoundOptionsScreen)(Object)(this)))).build());
+        directionalLayoutWidget.add(ButtonWidget.builder(Text.literal("Audio Priorities"), button -> mc.setScreen(new ConfigScreen((SoundOptionsScreen)(Object)(this)))).build());
         directionalLayoutWidget.add(ButtonWidget.builder(ScreenTexts.DONE, buttonWidget -> this.close()).build());
     }
 

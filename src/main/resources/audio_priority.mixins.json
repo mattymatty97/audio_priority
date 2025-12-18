@@ -11,8 +11,6 @@
   "client": [
     "SoundOptionsScreenMixin",
     "SoundSystemMixin",
-    "accessors.GameOptionsScreenAccessor",
-    "accessors.ScreenAccessor",
     "accessors.SoundEngineAccessor",
     "accessors.SoundManagerAccessor"
   ]

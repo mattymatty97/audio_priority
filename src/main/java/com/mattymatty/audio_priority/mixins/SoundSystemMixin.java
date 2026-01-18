@@ -44,7 +44,7 @@ public abstract class SoundSystemMixin {
 
     @Shadow
     @Final
-    private Map<SoundInstance, Integer> soundStartTicks;
+    private Map<SoundInstance, Integer> startTicks;
 
     @Shadow
     @Final
@@ -59,7 +59,7 @@ public abstract class SoundSystemMixin {
         Vec3d playerPos = null;
         Entity client = MinecraftClient.getInstance().player;
         if (client != null) {
-            playerPos = client.getEntityPos();
+            playerPos = client.getPos();
         }
 
         int category = Configs.getInstance().categoryClasses.getOrDefault(sound.getCategory().getName(), SoundCategory.values().length);
@@ -75,7 +75,7 @@ public abstract class SoundSystemMixin {
     }
 
     @Shadow
-    public abstract SoundSystem.PlayResult play(SoundInstance sound);
+    public abstract void play(SoundInstance sound);
 
     @Shadow
     public abstract void play(SoundInstance sound, int delay);
@@ -85,7 +85,7 @@ public abstract class SoundSystemMixin {
         return soundsPerTick.computeIfAbsent(tick, k -> new LinkedHashSet<>());
     }
 
-    @WrapOperation(method = "play(Lnet/minecraft/client/sound/SoundInstance;)Lnet/minecraft/client/sound/SoundSystem$PlayResult;", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/CompletableFuture;join()Ljava/lang/Object;"))
+    @WrapOperation(method = "play(Lnet/minecraft/client/sound/SoundInstance;)V", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/CompletableFuture;join()Ljava/lang/Object;"))
     Object onAcquireSourceManager(CompletableFuture<Object> instance, Operation<Object> original, SoundInstance sound) {
         Object ret = original.call(instance);
         //thorw an exception instead of just a log message ( allows me to skip successive play calls instead of spamming the logs )
@@ -140,13 +140,13 @@ public abstract class SoundSystemMixin {
                 }
                 count++;
                 //remove them from vanilla queue too
-                this.soundStartTicks.remove(soundInstance);
+                this.startTicks.remove(soundInstance);
             }
         } catch (SoundPoolException ex) {
             //this should not be called anymore cause the play method now uses a threshold to decide whenever to actually play a sound or skip it
             AudioPriority.LOGGER.warn("Sound pool full, Skipped {} sound events", total - count);
             //remove all missing from vanilla queue ( full skip )
-            instances.forEach(soundStartTicks::remove);
+            instances.forEach(startTicks::remove);
         }
 
         //remove due ticks from sound queue
@@ -158,8 +158,8 @@ public abstract class SoundSystemMixin {
     }
 
     //decide if to actually play or not a sound
-    @Inject(cancellable = true, method = "play(Lnet/minecraft/client/sound/SoundInstance;)Lnet/minecraft/client/sound/SoundSystem$PlayResult;", at = @At(value = "INVOKE_ASSIGN", ordinal = 0, target = "Lnet/minecraft/client/sound/Sound;isStreamed()Z"))
-    void should_play_sound(SoundInstance sound, CallbackInfoReturnable<SoundSystem.PlayResult> cir, @Local(ordinal = 2) LocalFloatRef volume) {
+    @Inject(cancellable = true, method = "play(Lnet/minecraft/client/sound/SoundInstance;)V", at = @At(value = "INVOKE_ASSIGN", ordinal = 0, target = "Lnet/minecraft/client/sound/Sound;isStreamed()Z"))
+    void should_play_sound(SoundInstance sound, CallbackInfo ci, @Local(ordinal = 2) LocalFloatRef volume) {
         if (sound == null)
             return;
         if (sound.getSound() == null)
@@ -172,8 +172,7 @@ public abstract class SoundSystemMixin {
         //WTF the mappings use inverted naming for some reason (@see Lnet/minecraft/client/sound/SoundEngine;createSource(Lnet/minecraft/client/sound/SoundEngine$RunMode;)Lnet/minecraft/client/sound/Source;)
         SoundEngine.SourceSet sourceSet = (sound.getSound().isStreamed()) ? staticSources : streamingSources;
         if (volumeMultiplier <= 0f || !should_play(sound, sourceSet)) {
-            cir.setReturnValue(SoundSystem.PlayResult.STARTED_SILENTLY);
-            cir.cancel();
+            ci.cancel();
         }else{
             volume.set(volume.get() * volumeMultiplier);
         }

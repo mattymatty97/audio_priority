@@ -17,7 +17,7 @@ public class ClickableListWidget extends ElementListWidget<ClickableListWidget.A
     private final int rowWidth;
 
     public ClickableListWidget(MinecraftClient minecraftClient, int width, int height, int top_padding, int itemHeight, int rowWidth) {
-        super(minecraftClient, width, height, top_padding, itemHeight);
+        super(minecraftClient, width, height, top_padding, height, itemHeight);
         this.rowWidth = rowWidth;
         this.spacebarPositionX = (width / 2) + (rowWidth / 2) + 10;
     }
@@ -32,7 +32,7 @@ public class ClickableListWidget extends ElementListWidget<ClickableListWidget.A
     }
 
     @Override
-    public int getScrollbarX() {
+    public int getScrollbarPositionX() {
         return spacebarPositionX;
     }
 
@@ -42,7 +42,7 @@ public class ClickableListWidget extends ElementListWidget<ClickableListWidget.A
     }
     
 
-    public abstract class AbstractListWidgetEntry extends Entry<AbstractListWidgetEntry> {}
+    public abstract static class AbstractListWidgetEntry extends Entry<AbstractListWidgetEntry> {}
 
     public class ListWidgetEntry extends AbstractListWidgetEntry {
 
@@ -63,11 +63,12 @@ public class ClickableListWidget extends ElementListWidget<ClickableListWidget.A
         }
 
         @Override
-        public void render(DrawContext context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
+        public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta)
+        {
             for (WidgetHolder holder : widgets) {
-                holder.widget.setX(getX() + ClickableListWidget.this.rowWidth / 2 - 155 + holder.getDx());
-                holder.widget.setY(getY() + holder.getDy());
-                holder.widget.render(context, mouseX, mouseY, deltaTicks);
+                holder.widget.setX(x + ClickableListWidget.this.rowWidth / 2 - 155 + holder.getDx());
+                holder.widget.setY(y + holder.getDy());
+                holder.widget.render(context, mouseX, mouseY, tickDelta);
             }
         }
 

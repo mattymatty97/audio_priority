@@ -29,14 +29,15 @@ public class CategoryConfigScreen extends Screen {
     protected void init() {
         assert this.client != null;
 
-        ClickableListWidget listWidget = new ClickableListWidget(this.client, this.width, this.height - 64, 32, 25, 310);
+        ClickableListWidget listWidget = new ClickableListWidget(this.client, this.width, this.height - 32, 32, 25, 310);
 
         List<SoundCategory> soundCategories = Arrays.stream(SoundCategory.values()).filter(soundCategory -> soundCategory != SoundCategory.MASTER).toList();
 
         int count = soundCategories.size() + 1;
 
         listWidget.addEntry(
-                CyclingButtonWidget.builder(v -> Text.literal(v.toString()), Configs.getInstance().categoryClasses.getOrDefault(SoundCategory.MASTER.getName(),0))
+                CyclingButtonWidget.builder((Integer v) -> Text.literal(v.toString()))
+                        .initially(Configs.getInstance().categoryClasses.getOrDefault(SoundCategory.MASTER.getName(),0))
                         .values(IntStream.range(0, count - 1).boxed().toList())
                         .build(0, 0, 310, 20,
                                 Text.translatable("soundCategory." + SoundCategory.MASTER.getName())
@@ -49,15 +50,16 @@ public class CategoryConfigScreen extends Screen {
             ClickableWidget widget1;
             ClickableWidget widget2;
 
-            widget1 = CyclingButtonWidget.builder(v -> Text.literal(v.toString()),Configs.getInstance()
-                            .categoryClasses.getOrDefault(category.getName(),SoundCategory.values().length))
+            widget1 = CyclingButtonWidget.builder((Integer v) -> Text.literal(v.toString()))
+                    .initially(Configs.getInstance().categoryClasses.getOrDefault(category.getName(),SoundCategory.values().length))
                     .values(IntStream.range(0, count - 1).boxed().toList())
                     .build(0, 0, 150, 20,
                             Text.translatable("soundCategory." + category.getName())
                             , (button, value) -> Configs.getInstance().categoryClasses.put(category.getName(), value));
 
             if (category2 != null){
-                widget2 = CyclingButtonWidget.builder(v -> Text.literal(v.toString()), Configs.getInstance()
+                widget2 = CyclingButtonWidget.builder((Integer v) -> Text.literal(v.toString()))
+                        .initially(Configs.getInstance()
                                 .categoryClasses.getOrDefault(category2.getName(),SoundCategory.values().length))
                         .values(IntStream.range(0, count - 1).boxed().toList())
                         .build(160, 0, 150, 20,
@@ -89,6 +91,7 @@ public class CategoryConfigScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta)  {
+        this.renderBackground(context);
         super.render(context, mouseX, mouseY, delta);
 
         context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 15, 0xFFFFFF);

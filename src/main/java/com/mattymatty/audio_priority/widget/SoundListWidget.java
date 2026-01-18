@@ -1,4 +1,4 @@
-package com.mattymatty.audio_priority.screen;
+package com.mattymatty.audio_priority.widget;
 
 import com.google.common.collect.ImmutableList;
 import com.mattymatty.audio_priority.Configs;
@@ -6,7 +6,6 @@ import com.mattymatty.audio_priority.mixins.accessors.SoundManagerAccessor;
 import joptsimple.internal.Strings;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
@@ -32,7 +31,7 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
     List<AbstractSoundEntryWidget> sounds = new LinkedList<>();
 
     @Override
-    public int getScrollbarX() {
+    public int getScrollbarPositionX() {
         return spacebarPositionX;
     }
 
@@ -45,11 +44,11 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
             MinecraftClient client,
             int width,
             int height,
-            int top,
+            int top_padding,
             int itemHeight,
             int rowWidth
     ) {
-        super(client, width, height, top, itemHeight);
+        super(client, width, height, top_padding, height, itemHeight);
         this.rowWidth = rowWidth;
         this.spacebarPositionX = (width / 2) + (rowWidth / 2) + 10;
 
@@ -213,14 +212,14 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
         }
 
         @Override
-        public void render(DrawContext context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
-            this.drawName(context,getX() + this.getWidth()/2 - spacing, getY());
-            this.volumeSlider.setX(getX() + this.getWidth()/2 + spacing);
-            this.volumeSlider.setY(getY() + yOffset);
-            this.volumeSlider.render(context, mouseX, mouseY, deltaTicks);
-            this.resetButton.setX(getX() + this.getWidth()/2 + spacing + this.volumeSlider.getWidth() + spacing);
-            this.resetButton.setY(getY() + yOffset);
-            this.resetButton.render(context, mouseX, mouseY, deltaTicks);
+        public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+            this.drawName(context,x + entryWidth / 2 - spacing, y);
+            this.volumeSlider.setX(x + entryWidth/2 + spacing);
+            this.volumeSlider.setY(y + yOffset);
+            this.volumeSlider.render(context, mouseX, mouseY, tickDelta);
+            this.resetButton.setX(x + entryWidth/2 + spacing + this.volumeSlider.getWidth() + spacing);
+            this.resetButton.setY(y+ yOffset);
+            this.resetButton.render(context, mouseX, mouseY, tickDelta);
         }
 
         public boolean shouldShow(String search) {
@@ -264,9 +263,9 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
         }
 
         @Override
-        public void render(DrawContext context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
+        public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             MinecraftClient mc = MinecraftClient.getInstance();
-            context.drawCenteredTextWithShadow(mc.textRenderer, this.name, getX() + this.getWidth()/ 2, getY() + 5,  Colors.WHITE);
+            context.drawCenteredTextWithShadow(mc.textRenderer, this.name, x + entryWidth/ 2, y + 5,  Colors.WHITE);
         }
 
         @Override

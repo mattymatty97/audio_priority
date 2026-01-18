@@ -29,7 +29,7 @@ public class InstantConfigScreen extends Screen {
     protected void init() {
         assert this.client != null;
 
-        ClickableListWidget listWidget = new ClickableListWidget(this.client, this.width, this.height - 64, 32, 25, 310);
+        ClickableListWidget listWidget = new ClickableListWidget(this.client, this.width, this.height - 32, 32, 25, 310);
 
         List<SoundCategory> soundCategories = Arrays.stream(SoundCategory.values()).filter(soundCategory -> soundCategory != SoundCategory.MASTER).toList();
 
@@ -101,6 +101,7 @@ public class InstantConfigScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta)  {
+        this.renderBackground(context);
         super.render(context, mouseX, mouseY, delta);
 
         context.drawCenteredTextWithShadow( this.textRenderer, this.title, this.width / 2, 15, 0xFFFFFF);

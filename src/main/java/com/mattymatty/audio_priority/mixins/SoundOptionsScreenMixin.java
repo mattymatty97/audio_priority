@@ -1,29 +1,29 @@
 package com.mattymatty.audio_priority.mixins;
 
 import com.mattymatty.audio_priority.screen.ConfigScreen;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.option.GameOptionsScreen;
-import net.minecraft.client.gui.screen.option.SoundOptionsScreen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.DirectionalLayoutWidget;
-import net.minecraft.client.option.GameOptions;
-import net.minecraft.screen.ScreenTexts;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.layouts.LinearLayout;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.options.OptionsSubScreen;
+import net.minecraft.client.gui.screens.options.SoundOptionsScreen;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(SoundOptionsScreen.class)
-public abstract class SoundOptionsScreenMixin extends GameOptionsScreen {
-    public SoundOptionsScreenMixin(Screen parent, GameOptions gameOptions, Text title) {
+public abstract class SoundOptionsScreenMixin extends OptionsSubScreen {
+    public SoundOptionsScreenMixin(Screen parent, Options gameOptions, Component title) {
         super(parent, gameOptions, title);
     }
 
     @Override
-    protected void initFooter() {
-        MinecraftClient mc = MinecraftClient.getInstance();
-        DirectionalLayoutWidget directionalLayoutWidget = this.layout.addFooter(DirectionalLayoutWidget.horizontal().spacing(8));
-        directionalLayoutWidget.add(ButtonWidget.builder(Text.literal("Audio Priorities"), button -> mc.setScreen(new ConfigScreen((SoundOptionsScreen)(Object)(this)))).build());
-        directionalLayoutWidget.add(ButtonWidget.builder(ScreenTexts.DONE, buttonWidget -> this.close()).build());
+    protected void addFooter() {
+        Minecraft mc = Minecraft.getInstance();
+        LinearLayout directionalLayoutWidget = this.layout.addToFooter(LinearLayout.horizontal().spacing(8));
+        directionalLayoutWidget.addChild(Button.builder(Component.literal("Audio Priorities"), button -> mc.setScreen(new ConfigScreen((SoundOptionsScreen)(Object)(this)))).build());
+        directionalLayoutWidget.addChild(Button.builder(CommonComponents.GUI_DONE, buttonWidget -> this.onClose()).build());
     }
 
 }

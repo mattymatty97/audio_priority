@@ -6,8 +6,7 @@ import com.google.gson.Strictness;
 import com.google.gson.stream.JsonWriter;
 import com.mojang.authlib.minecraft.client.ObjectMapper;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.sound.SoundCategory;
-
+import net.minecraft.sounds.SoundSource;
 import java.io.*;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,31 +26,31 @@ public class Configs implements Serializable {
     public Integer maxDuplicatedSoundsById;
 
     Configs() {
-        categoryClasses.put(SoundCategory.MASTER.getName(), 0);
-        categoryClasses.put(SoundCategory.VOICE.getName(), 0);
-        categoryClasses.put(SoundCategory.PLAYERS.getName(), 6);
-        categoryClasses.put(SoundCategory.HOSTILE.getName(), 5);
-        categoryClasses.put(SoundCategory.BLOCKS.getName(), 6);
-        categoryClasses.put(SoundCategory.MUSIC.getName(), 3);
-        categoryClasses.put(SoundCategory.RECORDS.getName(), 3);
-        categoryClasses.put(SoundCategory.NEUTRAL.getName(), 2);
-        categoryClasses.put(SoundCategory.WEATHER.getName(), 1);
-        categoryClasses.put(SoundCategory.AMBIENT.getName(), 1);
+        categoryClasses.put(SoundSource.MASTER.getName(), 0);
+        categoryClasses.put(SoundSource.VOICE.getName(), 0);
+        categoryClasses.put(SoundSource.PLAYERS.getName(), 6);
+        categoryClasses.put(SoundSource.HOSTILE.getName(), 5);
+        categoryClasses.put(SoundSource.BLOCKS.getName(), 6);
+        categoryClasses.put(SoundSource.MUSIC.getName(), 3);
+        categoryClasses.put(SoundSource.RECORDS.getName(), 3);
+        categoryClasses.put(SoundSource.NEUTRAL.getName(), 2);
+        categoryClasses.put(SoundSource.WEATHER.getName(), 1);
+        categoryClasses.put(SoundSource.AMBIENT.getName(), 1);
 
 
-        maxPercentPerCategory.put(SoundCategory.MASTER.getName(), 1f);
-        maxPercentPerCategory.put(SoundCategory.VOICE.getName(), 1f);
-        maxPercentPerCategory.put(SoundCategory.PLAYERS.getName(), 0.95f);
-        maxPercentPerCategory.put(SoundCategory.HOSTILE.getName(), 0.9f);
-        maxPercentPerCategory.put(SoundCategory.BLOCKS.getName(), 0.8f);
-        maxPercentPerCategory.put(SoundCategory.MUSIC.getName(), 0.7f);
-        maxPercentPerCategory.put(SoundCategory.RECORDS.getName(), 0.7f);
-        maxPercentPerCategory.put(SoundCategory.NEUTRAL.getName(), 0.6f);
-        maxPercentPerCategory.put(SoundCategory.WEATHER.getName(), 0.5f);
-        maxPercentPerCategory.put(SoundCategory.AMBIENT.getName(), 0.5f);
+        maxPercentPerCategory.put(SoundSource.MASTER.getName(), 1f);
+        maxPercentPerCategory.put(SoundSource.VOICE.getName(), 1f);
+        maxPercentPerCategory.put(SoundSource.PLAYERS.getName(), 0.95f);
+        maxPercentPerCategory.put(SoundSource.HOSTILE.getName(), 0.9f);
+        maxPercentPerCategory.put(SoundSource.BLOCKS.getName(), 0.8f);
+        maxPercentPerCategory.put(SoundSource.MUSIC.getName(), 0.7f);
+        maxPercentPerCategory.put(SoundSource.RECORDS.getName(), 0.7f);
+        maxPercentPerCategory.put(SoundSource.NEUTRAL.getName(), 0.6f);
+        maxPercentPerCategory.put(SoundSource.WEATHER.getName(), 0.5f);
+        maxPercentPerCategory.put(SoundSource.AMBIENT.getName(), 0.5f);
 
-        instantCategories.add(SoundCategory.MASTER.getName());
-        instantCategories.add(SoundCategory.MUSIC.getName());
+        instantCategories.add(SoundSource.MASTER.getName());
+        instantCategories.add(SoundSource.MUSIC.getName());
 
         maxDuplicatedSoundsByPos = 5;
         maxDuplicatedSoundsById = 50;

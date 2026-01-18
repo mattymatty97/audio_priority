@@ -1,14 +1,14 @@
 package com.mattymatty.audio_priority.mixins.accessors;
 
-import net.minecraft.client.sound.SoundEngine;
+import com.mojang.blaze3d.audio.Library;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(SoundEngine.class)
+@Mixin(Library.class)
 public interface SoundEngineAccessor {
     @Accessor
-    SoundEngine.SourceSet getStreamingSources();
+    Library.ChannelPool getStaticChannels();
 
     @Accessor
-    SoundEngine.SourceSet getStaticSources();
+    Library.ChannelPool getStreamingChannels();
 }

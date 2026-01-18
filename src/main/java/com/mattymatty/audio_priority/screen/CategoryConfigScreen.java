@@ -3,65 +3,64 @@ package com.mattymatty.audio_priority.screen;
 import com.mattymatty.audio_priority.Configs;
 import com.mattymatty.audio_priority.client.AudioPriority;
 import com.mattymatty.audio_priority.widget.ClickableListWidget;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.gui.widget.CyclingButtonWidget;
-import net.minecraft.screen.ScreenTexts;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.text.Text;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundSource;
 
 public class CategoryConfigScreen extends Screen {
     protected final Screen parent;
 
     public CategoryConfigScreen(Screen parent) {
-        super(Text.literal("Sound Category Priorities"));
+        super(Component.literal("Sound Category Priorities"));
         this.parent = parent;
     }
 
     @Override
     protected void init() {
-        assert this.client != null;
+        assert this.minecraft != null;
 
-        ClickableListWidget listWidget = new ClickableListWidget(this.client, this.width, this.height - 64, 32, 25, 310);
+        ClickableListWidget listWidget = new ClickableListWidget(this.minecraft, this.width, this.height - 64, 32, 25, 310);
 
-        List<SoundCategory> soundCategories = Arrays.stream(SoundCategory.values()).filter(soundCategory -> soundCategory != SoundCategory.MASTER).toList();
+        List<SoundSource> soundCategories = Arrays.stream(SoundSource.values()).filter(soundCategory -> soundCategory != SoundSource.MASTER).toList();
 
         int count = soundCategories.size() + 1;
 
         listWidget.addEntry(
-                CyclingButtonWidget.builder(v -> Text.literal(v.toString()), Configs.getInstance().categoryClasses.getOrDefault(SoundCategory.MASTER.getName(),0))
-                        .values(IntStream.range(0, count - 1).boxed().toList())
-                        .build(0, 0, 310, 20,
-                                Text.translatable("soundCategory." + SoundCategory.MASTER.getName())
-                                , (button, value) -> Configs.getInstance().categoryClasses.put(SoundCategory.MASTER.getName(), value))
+                CycleButton.builder(v -> Component.literal(v.toString()), Configs.getInstance().categoryClasses.getOrDefault(SoundSource.MASTER.getName(),0))
+                        .withValues(IntStream.range(0, count - 1).boxed().toList())
+                        .create(0, 0, 310, 20,
+                                Component.translatable("soundCategory." + SoundSource.MASTER.getName())
+                                , (button, value) -> Configs.getInstance().categoryClasses.put(SoundSource.MASTER.getName(), value))
         );
 
         for (int i = 0; i < soundCategories.size(); i += 2) {
-            SoundCategory category = soundCategories.get(i);
-            SoundCategory category2 = i < soundCategories.size() -1 ? soundCategories.get(i + 1) : null;
-            ClickableWidget widget1;
-            ClickableWidget widget2;
+            SoundSource category = soundCategories.get(i);
+            SoundSource category2 = i < soundCategories.size() -1 ? soundCategories.get(i + 1) : null;
+            AbstractWidget widget1;
+            AbstractWidget widget2;
 
-            widget1 = CyclingButtonWidget.builder(v -> Text.literal(v.toString()),Configs.getInstance()
-                            .categoryClasses.getOrDefault(category.getName(),SoundCategory.values().length))
-                    .values(IntStream.range(0, count - 1).boxed().toList())
-                    .build(0, 0, 150, 20,
-                            Text.translatable("soundCategory." + category.getName())
+            widget1 = CycleButton.builder(v -> Component.literal(v.toString()),Configs.getInstance()
+                            .categoryClasses.getOrDefault(category.getName(),SoundSource.values().length))
+                    .withValues(IntStream.range(0, count - 1).boxed().toList())
+                    .create(0, 0, 150, 20,
+                            Component.translatable("soundCategory." + category.getName())
                             , (button, value) -> Configs.getInstance().categoryClasses.put(category.getName(), value));
 
             if (category2 != null){
-                widget2 = CyclingButtonWidget.builder(v -> Text.literal(v.toString()), Configs.getInstance()
-                                .categoryClasses.getOrDefault(category2.getName(),SoundCategory.values().length))
-                        .values(IntStream.range(0, count - 1).boxed().toList())
-                        .build(160, 0, 150, 20,
-                                Text.translatable("soundCategory." + category2.getName())
+                widget2 = CycleButton.builder(v -> Component.literal(v.toString()), Configs.getInstance()
+                                .categoryClasses.getOrDefault(category2.getName(),SoundSource.values().length))
+                        .withValues(IntStream.range(0, count - 1).boxed().toList())
+                        .create(160, 0, 150, 20,
+                                Component.translatable("soundCategory." + category2.getName())
                                 , (button, value) -> Configs.getInstance().categoryClasses.put(category2.getName(), value));
                 listWidget.addEntry(widget1, widget2);
             }else{
@@ -69,11 +68,11 @@ public class CategoryConfigScreen extends Screen {
             }
         }
 
-        this.addDrawableChild(listWidget);
+        this.addRenderableWidget(listWidget);
 
-        this.addDrawableChild(
-                ButtonWidget.builder( ScreenTexts.DONE, button -> this.client.setScreen(this.parent))
-                        .dimensions(this.width / 2 - 100, this.height- 28, 200, 20).build());
+        this.addRenderableWidget(
+                Button.builder( CommonComponents.GUI_DONE, button -> this.minecraft.setScreen(this.parent))
+                        .bounds(this.width / 2 - 100, this.height- 28, 200, 20).build());
     }
 
 
@@ -88,10 +87,10 @@ public class CategoryConfigScreen extends Screen {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta)  {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta)  {
         super.render(context, mouseX, mouseY, delta);
 
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 15, 0xFFFFFF);
+        context.drawCenteredString(this.font, this.title, this.width / 2, 15, 0xFFFFFF);
     }
 
 }

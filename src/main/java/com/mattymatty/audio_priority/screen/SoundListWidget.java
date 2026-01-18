@@ -4,35 +4,38 @@ import com.google.common.collect.ImmutableList;
 import com.mattymatty.audio_priority.Configs;
 import com.mattymatty.audio_priority.mixins.accessors.SoundManagerAccessor;
 import joptsimple.internal.Strings;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.Selectable;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.client.gui.screen.narration.NarrationPart;
-import net.minecraft.client.gui.widget.*;
-import net.minecraft.screen.ScreenTexts;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Colors;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.ContainerObjectSelectionList;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.narration.NarratedElementType;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.CommonColors;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.*;
 import java.util.function.Consumer;
 
-public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractSoundEntryWidget> {
-    private static final Text DEFAULT = Text.translatable("options.gamma.default");
+public class SoundListWidget extends ContainerObjectSelectionList<SoundListWidget.AbstractSoundEntryWidget> {
+    private static final Component DEFAULT = Component.translatable("options.gamma.default");
 
     private final int spacebarPositionX;
     private final int rowWidth;
     List<AbstractSoundEntryWidget> sounds = new LinkedList<>();
 
     @Override
-    public int getScrollbarX() {
+    public int scrollBarX() {
         return spacebarPositionX;
     }
 
@@ -42,7 +45,7 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
     }
 
     public SoundListWidget(
-            MinecraftClient client,
+            Minecraft client,
             int width,
             int height,
             int top,
@@ -55,7 +58,7 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
 
         final Map<String, List<SoundWidgetEntry>> sound_map = new LinkedHashMap<>();
 
-        ((SoundManagerAccessor) this.client.getSoundManager()).getSounds().forEach((key, value) -> {
+        ((SoundManagerAccessor) this.minecraft.getSoundManager()).getRegistry().forEach((key, value) -> {
             List<SoundWidgetEntry> elements = sound_map.computeIfAbsent(key.getNamespace(), s -> new LinkedList<>());
             elements.add(new SoundWidgetEntry(value.getSubtitle(), key));
         });
@@ -73,7 +76,7 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
                 .forEach(
                         entry -> {
                             SoundNamespaceWidget namespaceWidget = new SoundNamespaceWidget(
-                                    Text.literal(entry.getKey().toUpperCase()).formatted(Formatting.BOLD, Formatting.YELLOW)
+                                    Component.literal(entry.getKey().toUpperCase()).withStyle(ChatFormatting.BOLD, ChatFormatting.YELLOW)
                             );
                             sounds.add(namespaceWidget);
                             entry.getValue()
@@ -110,33 +113,33 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
 
         private final Identifier identifier;
 
-        private final Text ruleName;
-        private final Text ruleSubtitle;
-        private final Text name;
-        private final Text subtitle;
-        protected final List<ClickableWidget> children = new LinkedList<>();
+        private final Component ruleName;
+        private final Component ruleSubtitle;
+        private final Component name;
+        private final Component subtitle;
+        protected final List<AbstractWidget> children = new LinkedList<>();
         private final VolumeSlider    volumeSlider;
-        private final ButtonWidget    resetButton;
+        private final Button    resetButton;
         private final int yOffset;
 
-        public SoundWidgetEntry(Text subtitle, Identifier identifier) {
+        public SoundWidgetEntry(Component subtitle, Identifier identifier) {
             super();
             this.identifier = identifier;
-            MutableText text = Text.literal(identifier.getPath());
-            MutableText text2 = null;
+            MutableComponent text = Component.literal(identifier.getPath());
+            MutableComponent text2 = null;
             if (subtitle != null) {
-                text2 = Text.literal("( ");
+                text2 = Component.literal("( ");
                 text2.append(subtitle);
-                text2.append(Text.literal(" )"));
+                text2.append(Component.literal(" )"));
             }
             this.ruleName = text;
             this.ruleSubtitle = subtitle;
             this.name = this.ruleName;
             this.subtitle = text2;
 
-            TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+            Font textRenderer = Minecraft.getInstance().font;
 
-            yOffset = Math.max(0, textRenderer.fontHeight + 2 - 10);
+            yOffset = Math.max(0, textRenderer.lineHeight + 2 - 10);
 
             float value = Configs.getInstance().soundVolumes.getOrDefault(identifier.toString(), 1f);
 
@@ -144,9 +147,9 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
 
             this.children.add(this.volumeSlider);
 
-            this.resetButton = ButtonWidget
-                    .builder(Text.literal("Reset"), button -> OnResetValue())
-                    .dimensions(0, 0, 40, 20)
+            this.resetButton = Button
+                    .builder(Component.literal("Reset"), button -> OnResetValue())
+                    .bounds(0, 0, 40, 20)
                     .build();
 
             if (Math.abs(value - 1f) < 0.01d)
@@ -177,43 +180,43 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
         }
 
         @Override
-        public List<? extends Element> children() {
+        public @NonNull List<? extends GuiEventListener> children() {
             return this.children;
         }
 
         @Override
-        public List<? extends Selectable> selectableChildren() {
+        public @NonNull List<? extends NarratableEntry> narratables() {
             return this.children;
         }
 
-        protected void drawName(DrawContext context, int textEndX, int y) {
-            MinecraftClient mc = MinecraftClient.getInstance();
-            List<Text> texts = new LinkedList<>();
+        protected void drawName(GuiGraphics context, int textEndX, int y) {
+            Minecraft mc = Minecraft.getInstance();
+            List<Component> texts = new LinkedList<>();
             if (this.name != null) {
                 texts.add(this.name);
             }
             if (this.subtitle != null) {
-                texts.add(this.subtitle.copy().formatted(Formatting.GRAY));
+                texts.add(this.subtitle.copy().withStyle(ChatFormatting.GRAY));
             }
             int index = 0;
 
-            TextRenderer renderer = mc.textRenderer;
+            Font renderer = mc.font;
 
             int offset = 2;
 
             if (texts.size() == 1){
-                offset = renderer.fontHeight / 2 + 3;
+                offset = renderer.lineHeight / 2 + 3;
             }
-            TextRenderer textRenderer = mc.textRenderer;
-            for (Text text : texts) {
-                int textWidth = renderer.getWidth(text);
-                context.drawTextWithShadow(textRenderer, text, textEndX - textWidth, y + offset + index * (textRenderer.fontHeight + 1),  Colors.WHITE);
+            Font textRenderer = mc.font;
+            for (Component text : texts) {
+                int textWidth = renderer.width(text);
+                context.drawString(textRenderer, text, textEndX - textWidth, y + offset + index * (textRenderer.lineHeight + 1),  CommonColors.WHITE);
                 index++;
             }
         }
 
         @Override
-        public void render(DrawContext context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
+        public void renderContent(@NonNull GuiGraphics context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
             this.drawName(context,getX() + this.getWidth()/2 - spacing, getY());
             this.volumeSlider.setX(getX() + this.getWidth()/2 + spacing);
             this.volumeSlider.setY(getY() + yOffset);
@@ -229,7 +232,7 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
             return this.ruleName.getString().toLowerCase(Locale.ROOT).contains(search) || ( this.ruleSubtitle != null && this.ruleSubtitle.getString().toLowerCase(Locale.ROOT).contains(search) );
         }
 
-        public Text getRuleName() {
+        public Component getRuleName() {
             return ruleName;
         }
 
@@ -248,9 +251,9 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
 
     public static class SoundNamespaceWidget extends AbstractSoundEntryWidget {
         private final List<AbstractSoundEntryWidget> sub_entries = new LinkedList<>();
-        final Text name;
+        final Component name;
 
-        public SoundNamespaceWidget(Text text) {
+        public SoundNamespaceWidget(Component text) {
             super();
             this.name = text;
         }
@@ -264,40 +267,40 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
         }
 
         @Override
-        public void render(DrawContext context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
-            MinecraftClient mc = MinecraftClient.getInstance();
-            context.drawCenteredTextWithShadow(mc.textRenderer, this.name, getX() + this.getWidth()/ 2, getY() + 5,  Colors.WHITE);
+        public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
+            Minecraft mc = Minecraft.getInstance();
+            context.drawCenteredString(mc.font, this.name, getX() + this.getWidth()/ 2, getY() + 5,  CommonColors.WHITE);
         }
 
         @Override
-        public List<? extends Element> children() {
+        public @NonNull List<? extends GuiEventListener> children() {
             return ImmutableList.of();
         }
 
         @Override
-        public List<? extends Selectable> selectableChildren() {
-            return ImmutableList.of(new Selectable() {
+        public @NonNull List<? extends NarratableEntry> narratables() {
+            return ImmutableList.of(new NarratableEntry() {
                 @Override
-                public SelectionType getType() {
-                    return SelectionType.HOVERED;
+                public @NonNull NarrationPriority narrationPriority() {
+                    return NarrationPriority.HOVERED;
                 }
 
                 @Override
-                public void appendNarrations(NarrationMessageBuilder builder) {
-                    builder.put(NarrationPart.TITLE, SoundNamespaceWidget.this.name);
+                public void updateNarration(@NonNull NarrationElementOutput builder) {
+                    builder.add(NarratedElementType.TITLE, SoundNamespaceWidget.this.name);
                 }
             });
         }
     }
 
-    private static class VolumeSlider extends SliderWidget {
+    private static class VolumeSlider extends AbstractSliderButton {
 
         private static final double EXPONENT = 2.0;
 
         private final Consumer<Double> callback;
 
         public VolumeSlider(int x, int y, int width, int height, double value, Consumer<Double> callback) {
-            super(x, y, width, height, ScreenTexts.EMPTY, volumeToSlider(value));
+            super(x, y, width, height, CommonComponents.EMPTY, volumeToSlider(value));
             this.callback = callback;
             this.updateMessage();
         }
@@ -314,11 +317,11 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
             double multiplier = sliderToVolume(this.value);
             double decibel = volumeToDb(multiplier);
             if (this.value <= 0)
-                this.setMessage(ScreenTexts.OFF);
+                this.setMessage(CommonComponents.OPTION_OFF);
             else if (Math.abs(decibel) < 0.1d)
                 this.setMessage(DEFAULT);
             else
-                this.setMessage(Text.literal(String.format("%+.1f dB", decibel)));
+                this.setMessage(Component.literal(String.format("%+.1f dB", decibel)));
         }
 
         @Override

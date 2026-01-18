@@ -1,28 +1,28 @@
 package com.mattymatty.audio_priority.widget;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.Selectable;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.gui.widget.ElementListWidget;
-
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.ContainerObjectSelectionList;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
+import org.jspecify.annotations.NonNull;
 
-public class ClickableListWidget extends ElementListWidget<ClickableListWidget.AbstractListWidgetEntry> {
+public class ClickableListWidget extends ContainerObjectSelectionList<ClickableListWidget.AbstractListWidgetEntry> {
 
     private final int spacebarPositionX;
     private final int rowWidth;
 
-    public ClickableListWidget(MinecraftClient minecraftClient, int width, int height, int top_padding, int itemHeight, int rowWidth) {
+    public ClickableListWidget(Minecraft minecraftClient, int width, int height, int top_padding, int itemHeight, int rowWidth) {
         super(minecraftClient, width, height, top_padding, itemHeight);
         this.rowWidth = rowWidth;
         this.spacebarPositionX = (width / 2) + (rowWidth / 2) + 10;
     }
 
-    public int addEntry(ClickableWidget...widgets){
+    public int addEntry(AbstractWidget...widgets){
         return super.addEntry(new ListWidgetEntry(widgets));
     }
 
@@ -32,7 +32,7 @@ public class ClickableListWidget extends ElementListWidget<ClickableListWidget.A
     }
 
     @Override
-    public int getScrollbarX() {
+    public int scrollBarX() {
         return spacebarPositionX;
     }
 
@@ -42,28 +42,28 @@ public class ClickableListWidget extends ElementListWidget<ClickableListWidget.A
     }
     
 
-    public abstract class AbstractListWidgetEntry extends Entry<AbstractListWidgetEntry> {}
+    public abstract static class AbstractListWidgetEntry extends Entry<AbstractListWidgetEntry> {}
 
     public class ListWidgetEntry extends AbstractListWidgetEntry {
 
         private final List<WidgetHolder> widgets = new LinkedList<>();
 
-        public ListWidgetEntry(ClickableWidget...widgets) {
+        public ListWidgetEntry(AbstractWidget...widgets) {
             Arrays.stream(widgets).map(WidgetHolder::new).forEach(this.widgets::add);
         }
 
         @Override
-        public List<? extends Selectable> selectableChildren() {
+        public @NonNull List<? extends NarratableEntry> narratables() {
             return List.of();
         }
 
         @Override
-        public List<? extends Element> children() {
+        public @NonNull List<? extends GuiEventListener> children() {
             return widgets.stream().map(WidgetHolder::getWidget).toList();
         }
 
         @Override
-        public void render(DrawContext context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
+        public void renderContent(@NonNull GuiGraphics context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
             for (WidgetHolder holder : widgets) {
                 holder.widget.setX(getX() + ClickableListWidget.this.rowWidth / 2 - 155 + holder.getDx());
                 holder.widget.setY(getY() + holder.getDy());
@@ -72,12 +72,12 @@ public class ClickableListWidget extends ElementListWidget<ClickableListWidget.A
         }
 
         public static class WidgetHolder{
-            private final ClickableWidget widget;
+            private final AbstractWidget widget;
 
             private final int dx;
             private final int dy;
 
-            public ClickableWidget getWidget() {
+            public AbstractWidget getWidget() {
                 return widget;
             }
 
@@ -89,7 +89,7 @@ public class ClickableListWidget extends ElementListWidget<ClickableListWidget.A
                 return dy;
             }
 
-            public WidgetHolder(ClickableWidget widget) {
+            public WidgetHolder(AbstractWidget widget) {
                 this.widget = widget;
                 this.dx = widget.getX();
                 this.dy = widget.getY();

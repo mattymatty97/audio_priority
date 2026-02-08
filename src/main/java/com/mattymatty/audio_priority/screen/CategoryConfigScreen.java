@@ -7,40 +7,34 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundSource;
 
 public class CategoryConfigScreen extends Screen {
+    static final Component TITLE = Component.literal("Sound Category Priorities");
+    public final HeaderAndFooterLayout layout = new HeaderAndFooterLayout(this);
     protected final Screen parent;
 
     public CategoryConfigScreen(Screen parent) {
-        super(Component.literal("Sound Category Priorities"));
+        super(TITLE);
         this.parent = parent;
     }
 
     @Override
     protected void init() {
-        assert this.minecraft != null;
+        this.layout.addTitleHeader(TITLE, this.font);
 
         ClickableListWidget listWidget = new ClickableListWidget(this.minecraft, this.width, this.height - 64, 32, 25, 310);
 
-        List<SoundSource> soundCategories = Arrays.stream(SoundSource.values()).filter(soundCategory -> soundCategory != SoundSource.MASTER).toList();
+        List<SoundSource> soundCategories = Arrays.stream(SoundSource.values()).filter(soundCategory -> soundCategory != SoundSource.MASTER && soundCategory != SoundSource.UI).toList();
 
-        int count = soundCategories.size() + 1;
-
-        listWidget.addEntry(
-                CycleButton.builder(v -> Component.literal(v.toString()), Configs.getInstance().categoryClasses.getOrDefault(SoundSource.MASTER.getName(),0))
-                        .withValues(IntStream.range(0, count - 1).boxed().toList())
-                        .create(0, 0, 310, 20,
-                                Component.translatable("soundCategory." + SoundSource.MASTER.getName())
-                                , (button, value) -> Configs.getInstance().categoryClasses.put(SoundSource.MASTER.getName(), value))
-        );
+        final int count = soundCategories.size() + 1;
 
         for (int i = 0; i < soundCategories.size(); i += 2) {
             SoundSource category = soundCategories.get(i);
@@ -68,13 +62,23 @@ public class CategoryConfigScreen extends Screen {
             }
         }
 
-        this.addRenderableWidget(listWidget);
+        this.layout.addToContents(listWidget);
 
-        this.addRenderableWidget(
-                Button.builder( CommonComponents.GUI_DONE, button -> this.minecraft.setScreen(this.parent))
-                        .bounds(this.width / 2 - 100, this.height- 28, 200, 20).build());
+        this.layout.addToFooter(Button.builder(CommonComponents.GUI_DONE, button -> this.onClose()).width(200).build());
+
+        this.layout.visitWidgets(this::addRenderableWidget);
+        this.repositionElements();
     }
 
+    @Override
+    protected void repositionElements() {
+        this.layout.arrangeElements();
+    }
+
+    @Override
+    public void onClose() {
+        this.minecraft.setScreen(this.parent);
+    }
 
     @Override
     public void removed() {
@@ -85,12 +89,4 @@ public class CategoryConfigScreen extends Screen {
             throw new RuntimeException(e);
         }
     }
-
-    @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta)  {
-        super.render(context, mouseX, mouseY, delta);
-
-        context.drawCenteredString(this.font, this.title, this.width / 2, 15, 0xFFFFFF);
-    }
-
 }

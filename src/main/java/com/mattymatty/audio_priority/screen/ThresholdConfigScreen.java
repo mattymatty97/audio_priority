@@ -10,34 +10,30 @@ import java.util.function.Consumer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundSource;
 
 public class ThresholdConfigScreen extends Screen {
+    static final Component TITLE = Component.literal("Thresholds");
+    public final HeaderAndFooterLayout layout = new HeaderAndFooterLayout(this);
 
     protected final Screen parent;
 
     public ThresholdConfigScreen(Screen parent) {
-        super(Component.literal("Thresholds"));
+        super(TITLE);
         this.parent = parent;
     }
 
     @Override
     protected void init() {
-        assert this.minecraft != null;
+        this.layout.addTitleHeader(TITLE, this.font);
 
         ClickableListWidget listWidget = new ClickableListWidget(this.minecraft, this.width, this.height - 64, 32, 25, 310);
 
-        ThresholdSlider slider = new ThresholdSlider(0, 0, 310, 20, Component.translatable("soundCategory." + SoundSource.MASTER.getName()), Configs.getInstance().maxPercentPerCategory.getOrDefault(SoundSource.MASTER.getName(), 0f), (d) ->
-                Configs.getInstance().maxPercentPerCategory.put(SoundSource.MASTER.getName(), (float)Math.clamp(d, 0, 1))
-        );
-        slider.active = false;
-
-        listWidget.addEntry(slider);
-
-        List<SoundSource> soundCategories = Arrays.stream(SoundSource.values()).filter(soundCategory -> soundCategory != SoundSource.MASTER).toList();
+        List<SoundSource> soundCategories = Arrays.stream(SoundSource.values()).filter(soundCategory -> soundCategory != SoundSource.MASTER && soundCategory != SoundSource.UI).toList();
 
         for (int i = 0; i < soundCategories.size(); i += 2) {
             SoundSource category = soundCategories.get(i);
@@ -71,13 +67,23 @@ public class ThresholdConfigScreen extends Screen {
                 new DuplicatesSlider(0, 0, 310, 20, Component.literal("Max Duplicated Sounds By Id"), Configs.getInstance().maxDuplicatedSoundsById , 200, (d) ->
                 Configs.getInstance().maxDuplicatedSoundsById = Math.max(1, d)));
 
-        this.addRenderableWidget(listWidget);
+        this.layout.addToContents(listWidget);
 
-        this.addRenderableWidget(
-                Button.builder( CommonComponents.GUI_DONE, button -> this.minecraft.setScreen(this.parent))
-                        .bounds(this.width / 2 - 100, this.height- 28, 200, 20).build());
+        this.layout.addToFooter(Button.builder(CommonComponents.GUI_DONE, button -> this.onClose()).width(200).build());
+
+        this.layout.visitWidgets(this::addRenderableWidget);
+        this.repositionElements();
     }
 
+    @Override
+    protected void repositionElements() {
+        this.layout.arrangeElements();
+    }
+
+    @Override
+    public void onClose() {
+        this.minecraft.setScreen(this.parent);
+    }
 
     @Override
     public void removed() {
@@ -87,13 +93,6 @@ public class ThresholdConfigScreen extends Screen {
             AudioPriority.LOGGER.error("Exception Saving Config file");
             throw new RuntimeException(e);
         }
-    }
-
-    @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta)  {
-        super.render(context, mouseX, mouseY, delta);
-
-        context.drawCenteredString(this.font, this.title, this.width / 2, 15, 0xFFFFFF);
     }
 
     private static class ThresholdSlider extends AbstractSliderButton {

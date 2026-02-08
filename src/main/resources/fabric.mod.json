@@ -32,6 +32,7 @@
     "audio_priority.mixins.json"
   ],
   "depends": {
-    "minecraft": ["${project.minecraft_version}"]
+    "minecraft": ["${project.minecraft_version}"],
+    "fabricloader": [">=${project.loader_version}"]
   }
 }

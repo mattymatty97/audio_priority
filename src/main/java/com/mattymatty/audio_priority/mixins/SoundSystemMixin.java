@@ -61,12 +61,16 @@ public abstract class SoundSystemMixin {
     @Unique
     private static int sound_comparator(SoundInstance sound) {
         Vec3 playerPos = null;
+        int category   = 0;
         Entity client = Minecraft.getInstance().player;
         if (client != null) {
             playerPos = client.position();
         }
 
-        int category = Configs.getInstance().categoryClasses.getOrDefault(sound.getSource().getName(), SoundSource.values().length);
+        final SoundSource source = sound.getSource();
+
+        if (source != SoundSource.MASTER && source != SoundSource.UI)
+            category = Configs.getInstance().categoryClasses.getOrDefault(sound.getSource().getName(), SoundSource.values().length);
 
         int tie_break = 1;
 
@@ -189,8 +193,12 @@ public abstract class SoundSystemMixin {
         if (sound == null)
             return false;
 
+        final SoundSource source = sound.getSource();
         //sounds that can be played outside the tick need to skip the duplication check
-        if (!Configs.getInstance().instantCategories.contains(sound.getSource().getName())) {
+        if (    source != SoundSource.MASTER &&
+                source != SoundSource.UI &&
+                !Configs.getInstance().instantCategories.contains(source.getName())
+        ) {
             var id = sound.getIdentifier();
             var here = new Vec3i((int) sound.getX(), (int) sound.getY(), (int) sound.getZ());
             var positionCount = 0;
@@ -235,7 +243,10 @@ public abstract class SoundSystemMixin {
 
         int sound_count = dest.getUsedCount();
         int max_count = dest.getMaxCount();
-        float percentage = Configs.getInstance().maxPercentPerCategory.getOrDefault(sound.getSource().getName(), 0.1f);
+        float percentage = 1.f;
+        if (source != SoundSource.MASTER && source != SoundSource.UI)
+            percentage = Configs.getInstance().maxPercentPerCategory.getOrDefault(sound.getSource().getName(), 0.1f);
+
         // check the sound pool fill level and compare it to the threshold for the current category
         boolean ret = (sound_count < (max_count) * percentage);
         if (!ret) {

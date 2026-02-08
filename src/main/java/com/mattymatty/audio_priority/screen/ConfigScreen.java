@@ -4,14 +4,23 @@ import com.mattymatty.audio_priority.Configs;
 import com.mattymatty.audio_priority.client.AudioPriority;
 import java.io.IOException;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.StringWidget;
+import net.minecraft.client.gui.layouts.GridLayout;
+import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
+import net.minecraft.client.gui.layouts.LayoutSettings;
+import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.options.OptionsSubScreen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 
 public class ConfigScreen extends Screen {
 
+    private static final Component TITLE = Component.literal("Audio Engine Tweaks");
     protected final Screen parent;
+    private final HeaderAndFooterLayout layout = new HeaderAndFooterLayout(this, 61, 33);
 
     public ConfigScreen(Screen parent) {
         this(parent, Component.literal("Audio Engine Tweaks Configs"));
@@ -24,20 +33,42 @@ public class ConfigScreen extends Screen {
 
     @Override
     protected void init() {
-        assert this.minecraft != null;
-        super.init();
-        this.addRenderableWidget(Button.builder(Component.literal("Sound Category Priorities"), button -> this.minecraft.setScreen(new CategoryConfigScreen(this)))
-                .bounds(this.width / 2 - 75, this.height / 6 + 48 - 6, 150, 20).build());
-        this.addRenderableWidget(Button.builder(Component.literal("Thresholds"), button -> this.minecraft.setScreen(new ThresholdConfigScreen(this)))
-                .bounds(this.width / 2 - 75, this.height / 6 + 72 - 6, 150, 20).build());
-        this.addRenderableWidget(Button.builder(Component.literal("Instant Categories"), button -> this.minecraft.setScreen(new InstantConfigScreen(this)))
-                .bounds(this.width / 2 - 75, this.height / 6 + 96 - 6, 150, 20).build());
-        this.addRenderableWidget(Button.builder(Component.literal("Sound List"), button -> this.minecraft.setScreen(new SoundListConfigScreen(this)))
-                .bounds(this.width / 2 - 75, this.height / 6 + 120 - 6, 150, 20).build());
-        this.addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> this.minecraft.setScreen(this.parent))
-                .bounds(this.width / 2 - 100, this.height / 6 + 168, 200, 20).build());
+        this.layout.addTitleHeader(TITLE, this.font);
+        GridLayout gridLayout = new GridLayout();
+        gridLayout.defaultCellSetting().paddingHorizontal(4).paddingBottom(4).alignHorizontallyCenter();
+        GridLayout.RowHelper rowHelper = gridLayout.createRowHelper(1);
+        rowHelper.addChild(Button.builder(
+                CategoryConfigScreen.TITLE,
+                button -> this.minecraft.setScreen(new CategoryConfigScreen(this)))
+                .build());
+        rowHelper.addChild(Button.builder(
+                ThresholdConfigScreen.TITLE,
+                button -> this.minecraft.setScreen(new ThresholdConfigScreen(this)))
+                .build());
+        rowHelper.addChild(Button.builder(
+                InstantConfigScreen.TITLE,
+                button -> this.minecraft.setScreen(new InstantConfigScreen(this)))
+                .build());
+        rowHelper.addChild(Button.builder(
+                SoundListConfigScreen.TITLE,
+                button -> this.minecraft.setScreen(new SoundListConfigScreen(this)))
+                .build());
+
+        this.layout.addToContents(gridLayout);
+        this.layout.addToFooter(Button.builder(CommonComponents.GUI_DONE, button -> this.onClose()).width(200).build());
+        this.layout.visitWidgets(this::addRenderableWidget);
+        this.repositionElements();
     }
 
+    @Override
+    protected void repositionElements() {
+        this.layout.arrangeElements();
+    }
+
+    @Override
+    public void onClose() {
+        this.minecraft.setScreen(this.parent);
+    }
 
     @Override
     public void removed() {
@@ -47,12 +78,5 @@ public class ConfigScreen extends Screen {
             AudioPriority.LOGGER.error("Exception Saving Config file");
             throw new RuntimeException(e);
         }
-    }
-
-    @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
-
-        context.drawCenteredString(this.font, this.title, this.width / 2, 15, 0xFFFFFF);
     }
 }

@@ -1,54 +1,64 @@
 package com.mattymatty.audio_priority.screen;
 
-import com.google.common.collect.ImmutableList;
 import com.mattymatty.audio_priority.Configs;
 import com.mattymatty.audio_priority.client.AudioPriority;
-import joptsimple.internal.Strings;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.StringWidget;
+import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
+import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.function.Consumer;
 
 public class SoundListConfigScreen extends Screen {
+    static final Component TITLE = Component.literal("Sound List");
+    public final HeaderAndFooterLayout layout = new HeaderAndFooterLayout(this, 8 + 9 + 8 + 20 + 4, 60);
     protected final Screen parent;
 
     protected EditBox searchBox;
     protected SoundListWidget soundList;
 
     public SoundListConfigScreen(Screen parent) {
-        super(Component.literal("Sound List"));
+        super(TITLE);
         this.parent = parent;
     }
 
     @Override
     protected void init() {
-        super.init();
-        assert this.minecraft != null;
-        this.searchBox = new EditBox(this.font, this.width / 2 - 100, 22, 200, 20, this.searchBox, Component.literal("Search Sound"));
+        LinearLayout linearLayout = this.layout.addToHeader(LinearLayout.vertical().spacing(4));
+        linearLayout.defaultCellSetting().alignHorizontallyCenter();
+        linearLayout.addChild(new StringWidget(this.title, this.font));
+        LinearLayout linearLayout2 = linearLayout.addChild(LinearLayout.horizontal().spacing(4));
+
+        this.searchBox = linearLayout2.addChild(
+                new EditBox(this.font, this.width / 2 - 100, 22, 200, 20, this.searchBox, Component.literal("Search Sound"))
+        );
         this.searchBox.setResponder(search -> this.soundList.showSearch(search));
-        this.soundList = new SoundListWidget(this.minecraft, this.width, this.height - 32 - 48, 48, this.font.lineHeight * 2 + 8, 470);
+        this.searchBox.setHint(Component.literal("Search...").setStyle(EditBox.SEARCH_HINT_STYLE));
+
+        this.soundList = this.layout.addToContents(new SoundListWidget(this.minecraft, this.width, this.layout.getContentHeight(), this.layout.getHeaderHeight(), this.font.lineHeight * 2 + 8, 470));
         this.soundList.showSearch(this.searchBox.getValue());
-        this.addWidget(this.searchBox);
-        this.addRenderableWidget(this.soundList);
-        this.addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> this.minecraft.setScreen(this.parent)).bounds(this.width / 2 - 100, (this.height) - 28, 200, 20).build());
+
+        this.layout.addToFooter(Button.builder(CommonComponents.GUI_DONE, button -> this.onClose()).width(200).build());
+
+        this.layout.visitWidgets(this::addRenderableWidget);
+        this.repositionElements();
+
         this.setInitialFocus(this.searchBox);
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
+    protected void repositionElements() {
+        this.layout.arrangeElements();
+    }
 
-        this.soundList.renderWidget(context, mouseX, mouseY, delta);
-        this.searchBox.render(context, mouseX, mouseY, delta);
-        context.drawCenteredString(this.font, this.title, this.width / 2, 8, 16777215);
-
+    @Override
+    public void onClose() {
+        this.minecraft.setScreen(this.parent);
     }
 
     @Override

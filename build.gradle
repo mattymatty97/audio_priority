@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version "${loom_version}"
+    id 'net.fabricmc.fabric-loom' version "${loom_version}"
     id 'maven-publish'
 }
 
@@ -11,25 +11,30 @@ base {
 }
 
 repositories {
-    maven { url "https://maven.terraformersmc.com/" }
+    // Add repositories to retrieve artifacts from in here.
+    // You should only use this when depending on other mods because
+    // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
+    // See https://docs.gradle.org/current/userguide/declaring_repositories.html
+    // for more information about repositories.
+    maven {
+        name = "Terraformers"
+        url = "https://maven.terraformersmc.com/"
+    }
 }
 
 dependencies {
     // To change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings loom.officialMojangMappings()
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     // Fabric API. This is technically optional, but you probably want it anyway.
     //modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    modCompileOnlyApi "com.terraformersmc:modmenu:15.0.0"
+
+    implementation("com.terraformersmc:modmenu:${project.modmenu_version}")
 }
 
-loom {
-    accessWidenerPath = file("src/main/resources/audio_priority.accesswidener")
-}
-
-processResources {
+tasks.named('processResources') {
     outputs.upToDateWhen { false }
     filteringCharset "UTF-8"
 
@@ -38,16 +43,12 @@ processResources {
     }
 }
 
-def targetJavaVersion = 21
 tasks.withType(JavaCompile).configureEach {
-    // ensure that the encoding is set to UTF-8, no matter what the system default is
-    // this fixes some edge cases with special characters not displaying correctly
-    // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
-    // If Javadoc is generated, this must be specified in that task too.
-    it.options.encoding = "UTF-8"
-    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
-        it.options.release = targetJavaVersion
-    }
+    it.options.release = 25
+}
+
+loom {
+    accessWidenerPath = file("src/main/resources/audio_priority.accesswidener")
 }
 
 java {
@@ -56,13 +57,8 @@ java {
     // If you remove this line, sources will not be generated.
     withSourcesJar()
 
-    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
-    if (JavaVersion.current() < javaVersion) {
-        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
-    }
-
-    sourceCompatibility = javaVersion
-    targetCompatibility = javaVersion
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 jar {
@@ -83,14 +79,14 @@ tasks.register("updateBuildNumber") {
 
         try {
             props.load(propsFile.newDataInputStream())
-        }catch (IOException ex){
+        }catch (IOException ignored){
             props.setProperty('mod_buildnumber', "1")
             props.setProperty('mod_version', project.mod_version.toString())
         }
 
         String prevVersion = (props.getProperty('mod_version'))
 
-        if (prevVersion.equals(project.mod_version)) {
+        if (prevVersion == project.mod_version) {
 
             buildnumber = (((props.getProperty('mod_buildnumber')) as Integer) + 1)
 
@@ -108,14 +104,14 @@ tasks.register("updateBuildNumber") {
 }
 
 tasks.register("FinalizeBuild", Copy) {
-    from "$buildDir/libs"
-    into "output/libs"
+    from(layout.buildDirectory.dir("libs"))
+    into(layout.projectDirectory.dir("output/libs"))
     include "${project.archives_base_name}-${project.version}.jar"
     rename { String filename ->
         return "${project.archives_base_name}-${project.version} build ${buildnumber}.jar"
     }
     doLast {
-        mkdir "output/libs"
+        mkdir(layout.projectDirectory.dir("output/libs"))
         println "Output File:"
         println "${project.archives_base_name}-${project.version} build ${buildnumber}.jar"
     }

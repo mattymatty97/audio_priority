@@ -167,7 +167,7 @@ public abstract class SoundSystemMixin {
 
     //decide if to actually play or not a sound
     @Inject(cancellable = true, method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)Lnet/minecraft/client/sounds/SoundEngine$PlayResult;", at = @At(value = "INVOKE_ASSIGN", ordinal = 0, target = "Lnet/minecraft/client/resources/sounds/Sound;shouldStream()Z"))
-    void should_play_sound(SoundInstance sound, CallbackInfoReturnable<SoundEngine.PlayResult> cir, @Local(ordinal = 2) LocalFloatRef volume) {
+    void should_play_sound(SoundInstance sound, CallbackInfoReturnable<SoundEngine.PlayResult> cir, @Local(name = "volume") LocalFloatRef volume) {
         if (sound == null)
             return;
         if (sound.getSound() == null)

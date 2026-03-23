@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -63,11 +63,12 @@ public class ClickableListWidget extends ContainerObjectSelectionList<ClickableL
         }
 
         @Override
-        public void renderContent(@NonNull GuiGraphics context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
+
+        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
             for (WidgetHolder holder : widgets) {
                 holder.widget.setX(getX() + ClickableListWidget.this.rowWidth / 2 - 155 + holder.getDx());
                 holder.widget.setY(getY() + holder.getDy());
-                holder.widget.render(context, mouseX, mouseY, deltaTicks);
+                holder.widget.extractRenderState(graphics, mouseX, mouseY, deltaTicks);
             }
         }
 

@@ -7,7 +7,7 @@ import joptsimple.internal.Strings;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
@@ -189,7 +189,7 @@ public class SoundListWidget extends ContainerObjectSelectionList<SoundListWidge
             return this.children;
         }
 
-        protected void drawName(GuiGraphics context, int textEndX, int y) {
+        protected void drawName(GuiGraphicsExtractor context, int textEndX, int y) {
             Minecraft mc = Minecraft.getInstance();
             List<Component> texts = new LinkedList<>();
             if (this.name != null) {
@@ -210,20 +210,19 @@ public class SoundListWidget extends ContainerObjectSelectionList<SoundListWidge
             Font textRenderer = mc.font;
             for (Component text : texts) {
                 int textWidth = renderer.width(text);
-                context.drawString(textRenderer, text, textEndX - textWidth, y + offset + index * (textRenderer.lineHeight + 1),  CommonColors.WHITE);
+                context.text(textRenderer, text, textEndX - textWidth, y + offset + index * (textRenderer.lineHeight + 1),  CommonColors.WHITE);
                 index++;
             }
         }
 
+
         @Override
-        public void renderContent(@NonNull GuiGraphics context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
-            this.drawName(context,getX() + this.getWidth()/2 - spacing, getY());
-            this.volumeSlider.setX(getX() + this.getWidth()/2 + spacing);
-            this.volumeSlider.setY(getY() + yOffset);
-            this.volumeSlider.render(context, mouseX, mouseY, deltaTicks);
-            this.resetButton.setX(getX() + this.getWidth()/2 + spacing + this.volumeSlider.getWidth() + spacing);
-            this.resetButton.setY(getY() + yOffset);
-            this.resetButton.render(context, mouseX, mouseY, deltaTicks);
+        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
+            this.drawName(graphics,getX() + this.getWidth()/2 - spacing, getY());
+            this.volumeSlider.setPosition(getX() + this.getWidth()/2 + spacing, getY() + yOffset);
+            this.volumeSlider.extractRenderState(graphics, mouseX, mouseY, deltaTicks);
+            this.resetButton.setPosition(getX() + this.getWidth()/2 + spacing + this.volumeSlider.getWidth() + spacing,getY() + yOffset);
+            this.resetButton.extractRenderState(graphics, mouseX, mouseY, deltaTicks);
         }
 
         public boolean shouldShow(String search) {
@@ -267,9 +266,9 @@ public class SoundListWidget extends ContainerObjectSelectionList<SoundListWidge
         }
 
         @Override
-        public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
+        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
             Minecraft mc = Minecraft.getInstance();
-            context.drawCenteredString(mc.font, this.name, getX() + this.getWidth()/ 2, getY() + 5,  CommonColors.WHITE);
+            graphics.centeredText(mc.font, this.name, getX() + this.getWidth()/ 2, getY() + 5,  CommonColors.WHITE);
         }
 
         @Override

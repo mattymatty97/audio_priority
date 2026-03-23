@@ -6,7 +6,7 @@ import com.terraformersmc.modmenu.api.ModMenuApi;
 
 public class AudioPriorityModMenu implements ModMenuApi {
     @Override
-    public ConfigScreenFactory<?> getModConfigScreenFactory() {
+    public ConfigScreenFactory<ConfigScreen> getModConfigScreenFactory() {
         return ConfigScreen::new;
     }
 }

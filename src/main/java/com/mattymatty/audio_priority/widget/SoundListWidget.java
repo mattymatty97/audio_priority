@@ -170,7 +170,7 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
 
         private void OnResetValue()
         {
-            this.volumeSlider.setValue(1d);
+            this.volumeSlider.setVolume(1d);
             this.resetButton.active = false;
             this.resetButton.setFocused(false);
         }
@@ -301,11 +301,10 @@ public class SoundListWidget extends ElementListWidget<SoundListWidget.AbstractS
             this.updateMessage();
         }
 
-        public void setValue(double value)
+        public void setVolume(double volume)
         {
-            this.value = volumeToSlider(value);
-            this.updateMessage();
-            applyValue();
+            double newValue = volumeToSlider(volume);
+            this.setValue(newValue);
         }
 
         @Override

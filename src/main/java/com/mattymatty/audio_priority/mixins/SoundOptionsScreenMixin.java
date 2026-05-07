@@ -22,7 +22,7 @@ public abstract class SoundOptionsScreenMixin extends OptionsSubScreen {
     protected void addFooter() {
         Minecraft mc = Minecraft.getInstance();
         LinearLayout directionalLayoutWidget = this.layout.addToFooter(LinearLayout.horizontal().spacing(8));
-        directionalLayoutWidget.addChild(Button.builder(Component.literal("Audio Priorities"), button -> mc.setScreen(new ConfigScreen((SoundOptionsScreen)(Object)(this)))).build());
+        directionalLayoutWidget.addChild(Button.builder(Component.literal("Audio Priorities"), button -> mc.gui.setScreen(new ConfigScreen((SoundOptionsScreen)(Object)(this)))).build());
         directionalLayoutWidget.addChild(Button.builder(CommonComponents.GUI_DONE, buttonWidget -> this.onClose()).build());
     }
 

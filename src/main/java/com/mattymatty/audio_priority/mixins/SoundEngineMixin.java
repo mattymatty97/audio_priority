@@ -1,5 +1,6 @@
 package com.mattymatty.audio_priority.mixins;
 
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -7,6 +8,7 @@ import com.llamalad7.mixinextras.sugar.ref.LocalFloatRef;
 import com.mattymatty.audio_priority.Configs;
 import com.mattymatty.audio_priority.client.AudioPriority;
 import com.mattymatty.audio_priority.exceptions.SoundPoolException;
+import com.mattymatty.audio_priority.interfaces.SoundSystemAdditions;
 import com.mattymatty.audio_priority.mixins.accessors.SoundEngineAccessor;
 import com.mojang.blaze3d.audio.Library;
 import net.minecraft.client.Minecraft;
@@ -15,6 +17,7 @@ import net.minecraft.client.resources.sounds.TickableSoundInstance;
 import net.minecraft.client.sounds.ChannelAccess;
 import net.minecraft.client.sounds.SoundEngine;
 import net.minecraft.core.Vec3i;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
@@ -35,7 +38,7 @@ import java.util.stream.Collectors;
 
 
 @Mixin(SoundEngine.class)
-public abstract class SoundSystemMixin {
+public abstract class SoundEngineMixin implements SoundSystemAdditions {
 
     @Unique
     private final Object memoryLock = new Object();
@@ -88,6 +91,12 @@ public abstract class SoundSystemMixin {
     @Shadow
     public abstract void playDelayed(SoundInstance sound, int delay);
 
+    @Shadow
+    private boolean loaded;
+
+    @Shadow
+    protected abstract float calculateVolume(SoundInstance instance);
+
     @Unique
     private Set<SoundInstance> getSoundList(int tick) {
         return soundsPerTick.computeIfAbsent(tick, k -> new LinkedHashSet<>());
@@ -131,7 +140,7 @@ public abstract class SoundSystemMixin {
                 .filter(e -> tickKeys.contains(e.getKey()))
                 .flatMap(e -> e.getValue().stream())
                 .distinct()
-                .sorted(Comparator.comparingInt(SoundSystemMixin::sound_comparator))
+                .sorted(Comparator.comparingInt(SoundEngineMixin::sound_comparator))
                 .toList();
 
         long total = instances.size();
@@ -165,6 +174,26 @@ public abstract class SoundSystemMixin {
         ci.cancel();
     }
 
+    @WrapMethod(method = "calculateVolume(Lnet/minecraft/client/resources/sounds/SoundInstance;)F")
+    float apply_volume_override(SoundInstance instance, Operation<Float> original)
+    {
+        float orig_volume = original.call(instance);
+        float volumeMultiplier = Configs.getInstance().soundVolumes.getOrDefault(instance.getIdentifier().toString(), 1f);
+        return Math.max(0f, orig_volume * volumeMultiplier);
+    }
+
+    @Unique
+    public void audio_priority$refreshSpecificVolume(final Identifier identifier) {
+        if (this.loaded) {
+            this.instanceToChannel.forEach((soundInstance, channelHandle) -> {
+                if (soundInstance.getIdentifier().equals(identifier)) {
+                    float newVolume = this.calculateVolume(soundInstance);
+                    channelHandle.execute(channel -> channel.setVolume(newVolume));
+                }
+            });
+        }
+    }
+
     //decide if to actually play or not a sound
     @Inject(cancellable = true, method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)Lnet/minecraft/client/sounds/SoundEngine$PlayResult;", at = @At(value = "INVOKE_ASSIGN", ordinal = 0, target = "Lnet/minecraft/client/resources/sounds/Sound;shouldStream()Z"))
     void should_play_sound(SoundInstance sound, CallbackInfoReturnable<SoundEngine.PlayResult> cir, @Local(name = "volume") LocalFloatRef volume) {
@@ -176,14 +205,16 @@ public abstract class SoundSystemMixin {
         Library.ChannelPool streamingSources = ((SoundEngineAccessor) this.library).getStaticChannels();
         Library.ChannelPool staticSources = ((SoundEngineAccessor) this.library).getStreamingChannels();
 
-        float volumeMultiplier = Configs.getInstance().soundVolumes.getOrDefault(sound.getIdentifier().toString(), 1f);
+        float newVolume = this.calculateVolume(sound);
+
         //WTF the mappings use inverted naming for some reason (@see Lnet/minecraft/client/sound/SoundEngine;createSource(Lnet/minecraft/client/sound/SoundEngine$RunMode;)Lnet/minecraft/client/sound/Source;)
         Library.ChannelPool sourceSet = (sound.getSound().shouldStream()) ? staticSources : streamingSources;
-        if (volumeMultiplier <= 0f || !should_play(sound, sourceSet)) {
+
+        if (newVolume <= 0f || !should_play(sound, sourceSet)) {
             cir.setReturnValue(SoundEngine.PlayResult.STARTED_SILENTLY);
             cir.cancel();
         }else{
-            volume.set(volume.get() * volumeMultiplier);
+            volume.set(newVolume);
         }
     }
 

@@ -33,19 +33,19 @@ public class ConfigScreen extends Screen {
         GridLayout.RowHelper rowHelper = gridLayout.createRowHelper(1);
         rowHelper.addChild(Button.builder(
                 CategoryConfigScreen.TITLE,
-                button -> this.minecraft.setScreen(new CategoryConfigScreen(this)))
+                button -> this.minecraft.gui.setScreen(new CategoryConfigScreen(this)))
                 .build());
         rowHelper.addChild(Button.builder(
                 ThresholdConfigScreen.TITLE,
-                button -> this.minecraft.setScreen(new ThresholdConfigScreen(this)))
+                button -> this.minecraft.gui.setScreen(new ThresholdConfigScreen(this)))
                 .build());
         rowHelper.addChild(Button.builder(
                 InstantConfigScreen.TITLE,
-                button -> this.minecraft.setScreen(new InstantConfigScreen(this)))
+                button -> this.minecraft.gui.setScreen(new InstantConfigScreen(this)))
                 .build());
         rowHelper.addChild(Button.builder(
                 SoundListConfigScreen.TITLE,
-                button -> this.minecraft.setScreen(new SoundListConfigScreen(this)))
+                button -> this.minecraft.gui.setScreen(new SoundListConfigScreen(this)))
                 .build());
 
         this.layout.addToContents(gridLayout);
@@ -61,7 +61,7 @@ public class ConfigScreen extends Screen {
 
     @Override
     public void onClose() {
-        this.minecraft.setScreen(this.parent);
+        this.minecraft.gui.setScreen(this.parent);
     }
 
     @Override

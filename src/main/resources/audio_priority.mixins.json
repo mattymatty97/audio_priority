@@ -10,7 +10,7 @@
   },
   "client": [
     "SoundOptionsScreenMixin",
-    "SoundSystemMixin",
+    "SoundEngineMixin",
     "accessors.SoundEngineAccessor",
     "accessors.SoundManagerAccessor"
   ]

@@ -2,6 +2,7 @@ package com.mattymatty.audio_priority.screen;
 
 import com.google.common.collect.ImmutableList;
 import com.mattymatty.audio_priority.Configs;
+import com.mattymatty.audio_priority.interfaces.SoundSystemAdditions;
 import com.mattymatty.audio_priority.mixins.accessors.SoundManagerAccessor;
 import joptsimple.internal.Strings;
 import net.minecraft.ChatFormatting;
@@ -16,6 +17,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -170,6 +172,10 @@ public class SoundListWidget extends ContainerObjectSelectionList<SoundListWidge
                 Configs.getInstance().soundVolumes.put(identifier.toString(), (float)newValue);
                 this.resetButton.active = true;
             }
+
+            SoundManager soundManager = Minecraft.getInstance().getSoundManager();
+            SoundSystemAdditions soundSystem = (SoundSystemAdditions)soundManager.soundEngine;
+            soundSystem.audio_priority$refreshSpecificVolume(identifier);
         }
 
         private void OnResetValue()

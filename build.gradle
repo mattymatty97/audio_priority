@@ -28,10 +28,7 @@ dependencies {
 
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-    // Fabric API. This is technically optional, but you probably want it anyway.
-    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-
-    implementation("com.terraformersmc:modmenu:${project.modmenu_version}")
+    compileOnlyApi "com.terraformersmc:modmenu:${project.modmenu_version}"
 }
 
 project.minecraft_version = project.minecraft_version.replace("snapshot-", "alpha.")

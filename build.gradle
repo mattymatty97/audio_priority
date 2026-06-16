@@ -31,7 +31,10 @@ dependencies {
     compileOnlyApi "com.terraformersmc:modmenu:${project.modmenu_version}"
 }
 
-project.minecraft_version = project.minecraft_version.replace("snapshot-", "alpha.").replace("pre-", "pre.")
+project.minecraft_version = project.minecraft_version
+        .replace("snapshot-", "alpha.")
+        .replace("pre-", "pre.")
+        .replace("rc-", "rc.")
 
 tasks.named('processResources') {
     outputs.upToDateWhen { false }

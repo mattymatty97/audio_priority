@@ -61,7 +61,7 @@ public class SoundListWidget extends ContainerObjectSelectionList<SoundListWidge
         final Map<String, List<SoundWidgetEntry>> sound_map = new LinkedHashMap<>();
 
         ((SoundManagerAccessor) this.minecraft.getSoundManager()).getRegistry().forEach((key, value) -> {
-            List<SoundWidgetEntry> elements = sound_map.computeIfAbsent(key.getNamespace(), s -> new LinkedList<>());
+            List<SoundWidgetEntry> elements = sound_map.computeIfAbsent(key.getNamespace(), _ -> new LinkedList<>());
             elements.add(new SoundWidgetEntry(value.getSubtitle(), key));
         });
 
@@ -150,7 +150,7 @@ public class SoundListWidget extends ContainerObjectSelectionList<SoundListWidge
             this.children.add(this.volumeSlider);
 
             this.resetButton = Button
-                    .builder(Component.literal("Reset"), button -> OnResetValue())
+                    .builder(Component.literal("Reset"), _ -> OnResetValue())
                     .bounds(0, 0, 40, 20)
                     .build();
 
@@ -223,12 +223,12 @@ public class SoundListWidget extends ContainerObjectSelectionList<SoundListWidge
 
 
         @Override
-        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
+        public void extractContent(final @NonNull GuiGraphicsExtractor graphics, boolean hovered) {
             this.drawName(graphics,getX() + this.getWidth()/2 - spacing, getY());
             this.volumeSlider.setPosition(getX() + this.getWidth()/2 + spacing, getY() + yOffset);
-            this.volumeSlider.extractRenderState(graphics, mouseX, mouseY, deltaTicks);
+            this.volumeSlider.extractRenderState(graphics);
             this.resetButton.setPosition(getX() + this.getWidth()/2 + spacing + this.volumeSlider.getWidth() + spacing,getY() + yOffset);
-            this.resetButton.extractRenderState(graphics, mouseX, mouseY, deltaTicks);
+            this.resetButton.extractRenderState(graphics);
         }
 
         public boolean shouldShow(String search) {
@@ -272,7 +272,7 @@ public class SoundListWidget extends ContainerObjectSelectionList<SoundListWidge
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
+        public void extractContent(final @NonNull GuiGraphicsExtractor graphics, boolean hovered) {
             Minecraft mc = Minecraft.getInstance();
             graphics.centeredText(mc.font, this.name, getX() + this.getWidth()/ 2, getY() + 5,  CommonColors.WHITE);
         }

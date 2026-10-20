@@ -22,12 +22,12 @@ public class ClickableListWidget extends ContainerObjectSelectionList<ClickableL
         this.spacebarPositionX = (width / 2) + (rowWidth / 2) + 10;
     }
 
-    public int addEntry(AbstractWidget...widgets){
-        return super.addEntry(new ListWidgetEntry(widgets));
+    public void addEntry(AbstractWidget...widgets){
+        super.addEntry(new ListWidgetEntry(widgets));
     }
 
     @Override
-    public int addEntry(AbstractListWidgetEntry entry){
+    public int addEntry(@NonNull AbstractListWidgetEntry entry){
         return super.addEntry(entry);
     }
 
@@ -63,12 +63,11 @@ public class ClickableListWidget extends ContainerObjectSelectionList<ClickableL
         }
 
         @Override
-
-        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float deltaTicks) {
+        public void extractContent(final @NonNull GuiGraphicsExtractor graphics, boolean hovered) {
             for (WidgetHolder holder : widgets) {
                 holder.widget.setX(getX() + ClickableListWidget.this.rowWidth / 2 - 155 + holder.getDx());
                 holder.widget.setY(getY() + holder.getDy());
-                holder.widget.extractRenderState(graphics, mouseX, mouseY, deltaTicks);
+                holder.widget.extractRenderState(graphics);
             }
         }
 

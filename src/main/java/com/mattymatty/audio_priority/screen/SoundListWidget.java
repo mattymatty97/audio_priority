@@ -17,6 +17,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.narration.NarrationTrigger;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -286,8 +287,8 @@ public class SoundListWidget extends ContainerObjectSelectionList<SoundListWidge
         public @NonNull List<? extends NarratableEntry> narratables() {
             return ImmutableList.of(new NarratableEntry() {
                 @Override
-                public @NonNull NarrationPriority narrationPriority() {
-                    return NarrationPriority.HOVERED;
+                public @NonNull NarrationPriority narrationPriority(@NonNull NarrationTrigger narrationTrigger) {
+                    return  NarrationPriority.HOVERED;
                 }
 
                 @Override
